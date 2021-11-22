@@ -1,9 +1,5 @@
 $fn = 30;
-
-
 //------------
-// Copyright (c) 2021, Nick Talavera
-// All rights reserved.
 // Start HDDock Specific Section
 function rand_int(mins=0,maxs=100)=round(rands(mins,maxs,1)[0]);
 
