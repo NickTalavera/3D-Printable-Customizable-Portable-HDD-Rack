@@ -100,13 +100,21 @@ left_align=false;
 rubber_feet_diameter=0;
 
 /* [USB Tweaking] */
+//mm
 USB_C_Height = 6.2;
+//mm
 USB_C_Width = 10.1;
+//mm
 USB_3_Micro_Height = 7.5;
+//mm
 USB_3_Micro_Width = 14.9;
+//mm
 USB_Micro_Height = 5.9;
+//mm
 USB_Micro_Width = 10.6;
+//mm
 USB_Mini_Height = 6;
+//mm
 USB_Mini_Width = 10;
 
 USB_STRUCT = [
