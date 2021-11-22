@@ -63,7 +63,7 @@ assert(tester): show_if_pass || show_if_pass ? echo(textin): undef
 // Coordinates are measured from bottom left corner
 // mm units
 // <W>x<H>x<D>x<C|Micro|3_Micro|Mini|None>x<X USB Coords>x<Y USB Coords>x<COUNT>
-text_list="80x15.5x110.6x3_Microx75x1x1 , 114.5x20.5x114.6x3_Microx75x1x1,
+text_list="80x15.5x110.6x3_Microx75x1x1 , 78.3x20.5x114.6x3_Microx75x1x1,
 75x7.3x107x3_Microx25x3x1,
 114.5x15.5x114.6xNonex25x3x1
 ";
@@ -71,7 +71,7 @@ text_list="80x15.5x110.6x3_Microx75x1x1 , 114.5x20.5x114.6x3_Microx75x1x1,
 // WD Ultra
 // 80x15.5x110.6x3_Microx75x1x1
 // Seagate Backup Plus
-// 114.5x20.5x114.6x3_Microx75x1x1
+// 78.3x20.5x114.6x3_Microx75x1x1
 // Toshiba
 // 75x7.3x107x3_Microx25x3x1
 
@@ -91,7 +91,7 @@ side_padding=0.1; //[0:0.1:6]
 //Depth of a rear shield in mm
 rear_shield=5; //[0:0.1:20]
 //Rounding of outside corners in mm
-rounding_radius=0; //[0:0.1:4]
+rounding_radius=0; //[0:0.2:4]
 //If true, left align drives in the cage.
 left_align=false; 
 //Diameter of round rubber feet you add separately
