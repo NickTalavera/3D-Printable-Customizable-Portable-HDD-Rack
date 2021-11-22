@@ -134,7 +134,7 @@ H_PAD = top_bottom_wall_thickness*2;
 W_PAD = side_wall_thickness*2;
 color_start=0.5;
 spacer=0.01;
-RUBBER_FEET_DEPTH_N=min(rubber_feet_depth,top_bottom_wall_thickness-spacer);
+RUBBER_FEET_DEPTH_N=rubber_feet_depth;
 
 USB_STRUCT = [
 ["c",[
@@ -201,32 +201,36 @@ module container(kv){
   full_height = d_height+H_PAD;
   full_depth = d_depth+rear_wall_thickness;
   lr_adjust = left_align && (d_width+W_PAD != CAGE_WIDTH)  ? CAGE_WIDTH-d_width-W_PAD: 0;
-  
-      translate([0, rear_shield, 0])
+  feet_vdiff = (RUBBER_FEET_DEPTH_N>top_bottom_wall_thickness ? (RUBBER_FEET_DEPTH_N-top_bottom_wall_thickness):0);
+      translate([0, rear_shield, feet_vdiff])
     difference()
     {
   
+    translate([0,0,feet_vdiff])
   //make cubby
   for (curr_count=[0:1:count-1]) {
-    
+      first=curr_count==0 && index==0;
+      accom_feet = RUBBER_FEET_DEPTH_N>top_bottom_wall_thickness && first;
+      
     //Color as a ratio of the counts so far out of the total count
           color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)])
       translate([0, 0, height_so_far+full_height*curr_count])
     
     difference()
     {
-
+translate([0,0,accom_feet?-feet_vdiff:0])
       difference()
       {
         // Hard Drive Slots
         // Outer Shell
         if (rounding_radius == 0) {
-          cube(size=[CAGE_WIDTH, CAGE_DEPTH+rear_shield, full_height], center=false);
+          cube(size=[CAGE_WIDTH, CAGE_DEPTH+rear_shield, full_height+(accom_feet?feet_vdiff:0)], center=false);
         }
         else {
           roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+rear_shield, full_height   ], center = false, radius = rounding_radius, apply_to = "all");
         }
         //Inner hollow
+        translate([0,0,accom_feet?+feet_vdiff:0])
         translate([0, rear_shield, 0])
         union () {
           translate([lr_adjust, CAGE_DEPTH-full_depth+rear_wall_thickness, 0])
@@ -252,15 +256,18 @@ module container(kv){
       }
       
       
-  // Add feet
-  translate([0+rubber_feet_diameter+side_wall_thickness,CAGE_DEPTH+rear_wall_thickness-rubber_feet_diameter,-RUBBER_FEET_DEPTH_N])
+//  // Add feet
+//      if (RUBBER_FEET_DEPTH_N>top_bottom_wall_thickness) {
+//          cube([CAGE_WIDTH,CAGE_DEPTH,RUBBER_FEET_DEPTH_N-top_bottom_wall_thickness*2]);
+//      }
+  translate([0+rubber_feet_diameter+side_wall_thickness,CAGE_DEPTH+rear_wall_thickness-rubber_feet_diameter,-RUBBER_FEET_DEPTH_N-spacer])
   feet(d_height, d_width, d_depth);
   translate([CAGE_WIDTH-rubber_feet_diameter-side_wall_thickness
-,CAGE_DEPTH+rear_wall_thickness-rubber_feet_diameter,-RUBBER_FEET_DEPTH_N])
+,CAGE_DEPTH+rear_wall_thickness-rubber_feet_diameter,-RUBBER_FEET_DEPTH_N-spacer])
   feet(d_height, d_width, d_depth);
-  translate([0+rubber_feet_diameter+side_wall_thickness,rubber_feet_diameter+rear_shield+rear_wall_thickness,-RUBBER_FEET_DEPTH_N])
-  feet(d_height, d_width, d_depth);
-  translate([CAGE_WIDTH+-rubber_feet_diameter-side_wall_thickness,rubber_feet_diameter+rear_shield+rear_wall_thickness,-RUBBER_FEET_DEPTH_N])
+  translate([0+rubber_feet_diameter+side_wall_thickness,rubber_feet_diameter+rear_shield+rear_wall_thickness,-RUBBER_FEET_DEPTH_N-spacer])
+  feet(d_height, d_width, d_depth-spacer);
+  translate([CAGE_WIDTH+-rubber_feet_diameter-side_wall_thickness,rubber_feet_diameter+rear_shield+rear_wall_thickness,-RUBBER_FEET_DEPTH_N-spacer])
   feet(d_height, d_width, d_depth);
  
   }
