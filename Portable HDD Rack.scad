@@ -200,12 +200,12 @@ module container(kv){
   for (curr_count=[0:1:count-1]) {
     
     //Color as a ratio of the counts so far out of the total count
-    
+          color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)])
+      translate([0, rear_shield, height_so_far+full_height*curr_count])
     
     difference()
     {
-      color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)])
-      translate([0, rear_shield, height_so_far+full_height*curr_count])
+
       difference()
       {
         // Hard Drive Slots
