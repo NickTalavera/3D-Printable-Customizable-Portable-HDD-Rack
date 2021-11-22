@@ -18,9 +18,7 @@
             "rear_wall_thickness": "2.5",
             "rubber_feet_diameter": "20",
             "side_padding": "0.10000000000000001",
-            "side_wall_thickness": "2.5",
             "text_list": "80x15.5x110.6x3_Microx75x9x1 , 114.5x20.5x114.6x3_Microx75x1x1,75x7.3x107x3_Microx25x14x1,114.5x15.5x114.6xNonex25x3x1",
-            "top_bottom_wall_thickness": "2.5",
             "vertical_padding": "0.10000000000000001"
         },
         "New set 2": {
@@ -41,9 +39,7 @@
             "rubber_feet_depth": "5",
             "rubber_feet_diameter": "10",
             "side_padding": "0.10000000000000001",
-            "side_wall_thickness": "2.5",
             "text_list": "80x15.5x110.6x3_Microx75x1x1 , 114.5x20.5x114.6x3_Microx75x1x1,75x7.3x107x3_Microx25x3x1,114.5x15.5x114.6xNonex25x3x1",
-            "top_bottom_wall_thickness": "2.5",
             "vertical_padding": "0.10000000000000001"
         },
         "New set 3": {
@@ -65,9 +61,7 @@
             "rubber_feet_depth": "5",
             "rubber_feet_diameter": "5",
             "side_padding": "0.10000000000000001",
-            "side_wall_thickness": "2.5",
             "text_list": "80x15.5x110.6xMinix75x7x2 , 93.5x20.5x114.6x3_Microx75x6x1,75x7.3x107xCx25x3x1,90x15.5x114.6xNonex25x5x1",
-            "top_bottom_wall_thickness": "2.5",
             "vertical_padding": "0.10000000000000001"
         },
         "New set 4": {
@@ -85,15 +79,65 @@
             "USB_Mini_Width": "10",
             "left_align": "false",
             "rear_shield": "11",
+            "rear_wall_thickness": "0",
+            "rounding_radius": "0",
+            "rubber_feet_depth": "0.40000000000000002",
+            "rubber_feet_diameter": "10",
+            "side_padding": "30",
+            "side_wall_thickness": "0",
+            "text_list": "80x15.5x110.6x3_Microx75x1x1 , 114.5x20.5x114.6x3_Microx75x1x1,75x7.3x107x3_Microx25x3x1,114.5x15.5x114.6xNonex25x3x2",
+            "top_bottom_wall_thickness": "0",
+            "vertical_padding": "0"
+        },
+        "New set 5": {
+            "$fn": "20",
+            "$fs": "0.5",
+            "ENABLE_DEBUGGING": "false",
+            "MAX_BOX_HEIGHT": "88",
+            "USB_3_Micro_Height": "7.5",
+            "USB_3_Micro_Width": "14.9",
+            "USB_C_Height": "6.2000000000000002",
+            "USB_C_Width": "10.1",
+            "USB_Micro_Height": "5.9000000000000004",
+            "USB_Micro_Width": "10.6",
+            "USB_Mini_Height": "6",
+            "USB_Mini_Width": "10",
+            "left_align": "false",
+            "rear_shield": "-29",
+            "rear_wall_thickness": "2.5",
+            "rounding_radius": "0",
+            "rubber_feet_depth": "0",
+            "rubber_feet_diameter": "5",
+            "side_padding": "0.10000000000000001",
+            "side_wall_thickness": "2.5",
+            "text_list": "80x15.5x110.6x3_Microx75x1x1 , 114.5x20.5x114.6x3_Microx75x1x1,75x7.3x107x3_Microx25x3x1,114.5x15.5x114.6xNonex25x3x1",
+            "top_bottom_wall_thickness": "0",
+            "vertical_padding": "0.10000000000000001"
+        },
+        "New set 6": {
+            "$fn": "20",
+            "$fs": "0.5",
+            "ENABLE_DEBUGGING": "false",
+            "MAX_BOX_HEIGHT": "88",
+            "USB_3_Micro_Height": "7.5",
+            "USB_3_Micro_Width": "14.9",
+            "USB_C_Height": "6.2000000000000002",
+            "USB_C_Width": "10.1",
+            "USB_Micro_Height": "5.9000000000000004",
+            "USB_Micro_Width": "10.6",
+            "USB_Mini_Height": "6",
+            "USB_Mini_Width": "10",
+            "left_align": "false",
+            "rear_shield": "5",
             "rear_wall_thickness": "2.5",
             "rounding_radius": "0",
             "rubber_feet_depth": "0.40000000000000002",
             "rubber_feet_diameter": "5",
             "side_padding": "0.10000000000000001",
-            "side_wall_thickness": "2.5",
-            "text_list": "80x15.5x110.6x3_Microx75x1x1 , 114.5x20.5x114.6x3_Microx75x1x1,75x7.3x107x3_Microx25x3x1,114.5x15.5x114.6xNonex25x3x2",
+            "side_wall_thickness": "2.6000000000000001",
+            "text_list": "80x15.5x110.6x3_Microx75x1x1 , 114.5x20.5x114.6x3_Microx75x1x1,75x7.3x107x3_Microx25x3x1,114.5x15.5x114.6xNonex25x3x1",
             "top_bottom_wall_thickness": "2.5",
-            "vertical_padding": "0.10000000000000001"
+            "vertical_padding": "0.20000000000000001"
         }
     }
 }
