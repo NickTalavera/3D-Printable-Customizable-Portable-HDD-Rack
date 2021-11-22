@@ -88,8 +88,6 @@ rear_wall_thickness=2.5;
 vertical_padding=0.1;
 //mm
 side_padding=0.1;
-//mm
-outer_corner_rounding = 3;
 //Depth of a rear shield in mm
 rear_shield=5;
 //Rounding of outside corners in mm
@@ -298,17 +296,17 @@ module cubby(conn_height,conn_width, d_height, d_width, d_depth,USB_type,vUSB,hU
       ])
       
       port(d_height, d_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
-      
-      
-      if (vUSB< max(conn_height,conn_width)/2) {
-        translate([side_wall_thickness+hUSB + side_padding,
-        
-        rear_wall_thickness*3,
-        (conn_height>=conn_width ? conn_width/2:conn_height/2)+
-        -vertical_padding+top_bottom_wall_thickness //+vUSB
-        ])
-        port(d_height, d_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
-      }
+//      
+//      
+//      if (vUSB< max(conn_height,conn_width)/2) {
+//        translate([side_wall_thickness+hUSB + side_padding,
+//        
+//        rear_wall_thickness*3,
+//        (conn_height>=conn_width ? conn_width/2:conn_height/2)+
+//        -vertical_padding+top_bottom_wall_thickness //+vUSB
+//        ])
+//        port(d_height, d_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
+//      }
     }
   }
 }
