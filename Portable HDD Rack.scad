@@ -212,6 +212,7 @@ module container(kv){
   //make cubby
   for (curr_count=[0:1:count-1]) {
       first=curr_count==0 && index==0;
+      last=curr_count==count-1 && index==len(DATA_STRUCT)-1;
       accom_feet = RUBBER_FEET_DEPTH_N>Y_WALL && first;
       
     //Color as a ratio of the counts so far out of the total count
@@ -220,23 +221,23 @@ module container(kv){
     
     difference()
     {
-translate([0,0,accom_feet?-feet_vdiff:0])
+translate([0,0,(accom_feet?-feet_vdiff:0)+(first?Y_WALL:0)])
       difference()
       {
         // Hard Drive Slots
         // Outer Shell
         if (rounding_radius == 0) {
-          cube(size=[CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height+(accom_feet?feet_vdiff:0)], center=false);
+          cube(size=[CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height+(accom_feet?feet_vdiff:0)+(first?-Y_WALL:0)+(last?Y_WALL:0)], center=false);
         }
         else {
           roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height   ], center = false, radius = rounding_radius, apply_to = "all");
         }
         //Inner hollow
-        translate([0,0,accom_feet?+feet_vdiff:0])
+        translate([0,0,(accom_feet?+feet_vdiff:0)+(first?-Y_WALL:0)])
         translate([0, D_SHIELD, 0])
         union () {
-          translate([lr_adjust, CAGE_DEPTH-full_depth+REAR_WALL, 0])
-          cubby(conn_height,conn_width, d_height, d_width, d_depth,USB_type,vUSB,hUSB);
+          translate([lr_adjust, CAGE_DEPTH-full_depth+REAR_WALL, +Y_WALL])
+          cubby(conn_height,conn_width, d_height+spacer, d_width, d_depth,USB_type,vUSB,hUSB);
           
           
         }
