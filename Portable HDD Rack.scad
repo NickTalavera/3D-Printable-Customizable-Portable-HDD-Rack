@@ -1,4 +1,5 @@
 $fn = 20;
+// Set to 0.01 for higher definition curves (renders slower)
 $fs = 0.5;
 //------------
 // Start HDDock Specific Section
@@ -84,7 +85,7 @@ side_padding=0.1;
 outer_corner_rounding = 3;
 left_align=false;
 rear_shield=5;
-rounding_radius=2;
+rounding_radius=0;
 
 /* [USB Tweaking] */
 USB_C_Height = 6.2;
@@ -190,8 +191,12 @@ module container(kv){
         // Hard Drive Slots
         // Outer Shell
        translate([0, -rear_shield, 0])
-  //      cube(size=[CAGE_WIDTH, CAGE_DEPTH+rear_shield, full_height], center=false);
+          if (rounding_radius == 0) {
+        cube(size=[CAGE_WIDTH, CAGE_DEPTH+rear_shield, full_height], center=false);
+          }
+          else {
           roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+rear_shield, full_height   ], center = false, radius = rounding_radius, apply_to = "all");
+          }
         //Inner hollow
         union () {
           translate([lr_adjust, CAGE_DEPTH-full_depth+rear_wall_thickness, 0])
@@ -493,12 +498,11 @@ function _str_int_recurse(str,base,i) =
 
 //END BOSL2
               
-// RoundedCorners from Daniel Shaw, copied from groovenectar on 11-21-2021
+// RoundedCorners from Daniel Shaw, copied from groovenectar's version on 11-21-2021
 // https://gist.github.com/groovenectar/92174cb1c98c1089347e
 // No license is attached. If you are an owner, please contact me if incorrect.
 // More information: https://danielupshaw.com/openscad-rounded-corners/
-// Set to 0.01 for higher definition curves (renders slower)
-$fs = 0.15;
+
 
 module roundedcube(size = [1, 1, 1], center = false, radius = 0.5, apply_to = "all") {
 	// If single value, convert to [x, y, z] vector
