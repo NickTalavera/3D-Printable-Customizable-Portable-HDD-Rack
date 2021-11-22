@@ -254,13 +254,13 @@ module cubby(conn_height,conn_width, d_height, d_width, d_depth,USB_type,vUSB,hU
       
       rear_wall_thickness*3,
       
-      -vertical_padding+top_bottom_wall_thickness//+vUSB
+      -vertical_padding+top_bottom_wall_thickness+vUSB
       ])
       
       port(d_height, d_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
       
       
-      if (vUSB< max(conn_height,conn_width)) {
+      if (vUSB< max(conn_height,conn_width)/2) {
         translate([side_wall_thickness+hUSB + side_padding,
         
         rear_wall_thickness*3,
