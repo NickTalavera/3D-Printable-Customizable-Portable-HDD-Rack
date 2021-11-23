@@ -39,11 +39,15 @@ new_struct=struct_set(struct,
 [device_name,new_struct];
 
 
-function parseInput(hole_list_str)=
+function parse_input(hole_list_str)=
 let (
 struct=[],
-split_by_comma=str_split(hole_list_str, ",", false),
+strip_outer=str_strip(hole_list_str," ,"),
+    q=echo(strip_outer),
+split_by_comma=str_split(strip_outer, ",", true),
+    f=echo(split_by_comma),
 split_out=[for (x=split_by_comma) str_split(str_strip(x, " m"), "x", false)],
+    z=echo(split_out),
 to_float=[for (x=split_out) [for (y=x) if(is_num(str_float(y))) str_float(y) else y]],
 to_struct=[for (index=[0:1:len(to_float)-1]) input_to_struct(to_float[index],index=index)]
 )
@@ -63,18 +67,23 @@ assert(tester): show_if_pass || show_if_pass ? echo(textin): undef
 // Coordinates are measured from bottom left corner
 // mm units
 // <W>x<H>x<D>x<C|Micro|3_Micro|Mini|None>x<X USB Coords>x<Y USB Coords>x<COUNT>
-text_list="80x15.5x110.6x3_Microx75x1x1 , 78.3x20.5x114.6x3_Microx75x1x1,
+text_list="
+80x15.5x110.6x3_Microx75x1x1 , 
+78.3x20.5x114.6x3_Microx75x1x1,
 75x7.3x107x3_Microx25x3x1,
-114.5x15.5x114.6xNonex25x3x1
 ";
 
+// EXAMPLES
 // WD Ultra
 // 80x15.5x110.6x3_Microx75x1x1
 // Seagate Backup Plus
 // 78.3x20.5x114.6x3_Microx75x1x1
 // Toshiba
 // 75x7.3x107x3_Microx25x3x1
+// Empty
+// 114.5x15.5x114.6xNonex25x3x1
 
+// RANDOM EXAMPLE MAKER
 //text_list=str("80x14x100xMicrox",rand_int(-10,80),"x",rand_int(-5,14),"x",rand_int(1,5),", ", rand_int(63.5,90),"x",rand_int(4,10),"x",rand_int(14,90),"x","3_Microx",rand_int(1,90),"x",rand_int(1,10),"x",rand_int(1,5));
 
 
@@ -89,7 +98,7 @@ vertical_padding=0.1; //[0:0.1:1]
 //mm
 side_padding=0.1; //[0:0.1:6]
 //Depth of a rear shield in mm
-rear_shield=5; //[0:0.1:20]
+rear_shield=0; //[0:1:60]
 //Rounding of outside corners in mm
 rounding_radius=0; //[0:0.2:4]
 //If true, left align drives in the cage.
@@ -160,24 +169,26 @@ USB_STRUCT = [
 ]
 ];
 
-DATA_STRUCT=parseInput(text_list);
+DATA_STRUCT=parse_input(text_list);
+//
+//if (ENABLE_DEBUGGING) {
+//  echo(str("Your total height is ",CAGE_HEIGHT,"mm"));
+//  echo(str("Your total width is ",CAGE_WIDTH,"mm"));
+//  echo(str("Your data is ",DATA_STRUCT));
+//  for (kv=DATA_STRUCT){
+//    details = kv[1];
+//    usb_type=struct_val(details,"type");
+//    usb_details=struct_val(USB_STRUCT,usb_type);
+//    echo(str("For ",kv[0],"\nThe data made is:\n",details));
+//  }
+//}
 
-if (ENABLE_DEBUGGING) {
-  echo(str("Your total height is ",CAGE_HEIGHT,"mm"));
-  echo(str("Your total width is ",CAGE_WIDTH,"mm"));
-  echo(str("Your data is ",DATA_STRUCT));
-  for (kv=DATA_STRUCT){
-    details = kv[1];
-    usb_type=struct_val(details,"type");
-    usb_details=struct_val(USB_STRUCT,usb_type);
-    echo(str("For ",kv[0],"\nThe data made is:\n",details));
-  }
-}
 
+FEET_VDIFF = (RUBBER_FEET_DEPTH_N>Y_WALL ? (RUBBER_FEET_DEPTH_N-Y_WALL):0);
 
 TOTAL_COUNT = sum([for (x=[0:1:len(DATA_STRUCT)-1]) struct_val(DATA_STRUCT[x][1],"count")]);
 CAGE_HEIGHT = sum([for (x=[0:1:len(DATA_STRUCT)-1])
-struct_val(DATA_STRUCT[x][1],"count") * (struct_val(DATA_STRUCT[x][1],"height")+H_PAD)]);
+struct_val(DATA_STRUCT[x][1],"count") * (struct_val(DATA_STRUCT[x][1],"height")+H_PAD)])+FEET_VDIFF;
 CAGE_WIDTH = max([for (x=[0:1:len(DATA_STRUCT)-1])
 (struct_val(DATA_STRUCT[x][1],"width")+W_PAD)]);
 CAGE_DEPTH = max([for (x=[0:1:len(DATA_STRUCT)-1])
@@ -203,12 +214,11 @@ module container(kv){
   full_height = d_height+H_PAD;
   full_depth = d_depth+REAR_WALL;
   lr_adjust = left_align && (d_width+W_PAD != CAGE_WIDTH)  ? CAGE_WIDTH-d_width-W_PAD: 0;
-  feet_vdiff = (RUBBER_FEET_DEPTH_N>Y_WALL ? (RUBBER_FEET_DEPTH_N-Y_WALL):0);
-      translate([0, D_SHIELD, feet_vdiff])
+        translate([0, D_SHIELD, FEET_VDIFF]);
     difference()
     {
   
-    translate([0,0,feet_vdiff])
+    translate([0,0,FEET_VDIFF])
   //make cubby
   for (curr_count=[0:1:count-1]) {
       first=curr_count==0 && index==0;
@@ -221,19 +231,19 @@ module container(kv){
     
     difference()
     {
-translate([0,0,(accom_feet?-feet_vdiff:0)+(first?Y_WALL:0)])
+translate([0,0,(accom_feet?-FEET_VDIFF:0)+(first?Y_WALL:0)])
       difference()
       {
         // Hard Drive Slots
         // Outer Shell
         if (rounding_radius == 0) {
-          cube(size=[CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height+(accom_feet?feet_vdiff:0)+(first?-Y_WALL:0)+(last?Y_WALL:0)], center=false);
+          cube(size=[CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height+(accom_feet?FEET_VDIFF:0)+(first?-Y_WALL:0)+(last?Y_WALL:0)], center=false);
         }
         else {
           roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height   ], center = false, radius = rounding_radius, apply_to = "all");
         }
         //Inner hollow
-        translate([0,0,(accom_feet?+feet_vdiff:0)+(first?-Y_WALL:0)])
+        translate([0,0,(accom_feet?+FEET_VDIFF:0)+(first?-Y_WALL:0)])
         translate([0, D_SHIELD, 0])
         union () {
           translate([lr_adjust, CAGE_DEPTH-full_depth+REAR_WALL, +Y_WALL])
