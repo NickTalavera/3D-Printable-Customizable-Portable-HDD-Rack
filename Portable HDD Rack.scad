@@ -170,18 +170,18 @@ USB_STRUCT = [
 ];
 
 DATA_STRUCT=parse_input(text_list);
-//
-//if (ENABLE_DEBUGGING) {
-//  echo(str("Your total height is ",CAGE_HEIGHT,"mm"));
-//  echo(str("Your total width is ",CAGE_WIDTH,"mm"));
-//  echo(str("Your data is ",DATA_STRUCT));
-//  for (kv=DATA_STRUCT){
-//    details = kv[1];
-//    usb_type=struct_val(details,"type");
-//    usb_details=struct_val(USB_STRUCT,usb_type);
-//    echo(str("For ",kv[0],"\nThe data made is:\n",details));
-//  }
-//}
+
+if (ENABLE_DEBUGGING) {
+  echo(str("Your total height is ",CAGE_HEIGHT,"mm"));
+  echo(str("Your total width is ",CAGE_WIDTH,"mm"));
+  echo(str("Your data is ",DATA_STRUCT));
+  for (kv=DATA_STRUCT){
+    details = kv[1];
+    usb_type=struct_val(details,"type");
+    usb_details=struct_val(USB_STRUCT,usb_type);
+    echo(str("For ",kv[0],"\nThe data made is:\n",details));
+  }
+}
 
 
 FEET_VDIFF = (RUBBER_FEET_DEPTH_N>Y_WALL ? (RUBBER_FEET_DEPTH_N-Y_WALL):0);
@@ -224,6 +224,7 @@ module container(kv){
       first=curr_count==0 && index==0;
       last=curr_count==count-1 && index==len(DATA_STRUCT)-1;
       accom_feet = RUBBER_FEET_DEPTH_N>Y_WALL && first;
+      accom_feet_add_height=(accom_feet?-FEET_VDIFF:0)+(first?Y_WALL:0);
       
     //Color as a ratio of the counts so far out of the total count
           color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)])
@@ -231,7 +232,7 @@ module container(kv){
     
     difference()
     {
-translate([0,0,(accom_feet?-FEET_VDIFF:0)+(first?Y_WALL:0)])
+translate([0,0,accom_feet_add_height])
       difference()
       {
         // Hard Drive Slots
@@ -269,19 +270,30 @@ translate([0,0,(accom_feet?-FEET_VDIFF:0)+(first?Y_WALL:0)])
       }
       
       
-//  // Add feet
-//      if (RUBBER_FEET_DEPTH_N>Y_WALL) {
-//          cube([CAGE_WIDTH,CAGE_DEPTH,RUBBER_FEET_DEPTH_N-Y_WALL*2]);
-//      }
-  translate([0+rubber_feet_diameter+X_WALL,CAGE_DEPTH+REAR_WALL-rubber_feet_diameter,-RUBBER_FEET_DEPTH_N-spacer])
+  // Add feet
+      if (RUBBER_FEET_DEPTH_N>Y_WALL) {
+          cube([CAGE_WIDTH,CAGE_DEPTH,RUBBER_FEET_DEPTH_N-Y_WALL*2]);
+      }
+      translate([0,0,FEET_VDIFF])
+     union() {
+         zu=rubber_feet_diameter+D_SHIELD+REAR_WALL;
+         zd=CAGE_DEPTH-REAR_WALL-rubber_feet_diameter;
+         y=-RUBBER_FEET_DEPTH_N-spacer;
+         xr=rubber_feet_diameter+X_WALL;
+         xl=rubber_feet_diameter+X_WALL;
+  translate([xr,zd,y])
   feet(d_height, d_width, d_depth);
-  translate([CAGE_WIDTH-rubber_feet_diameter-X_WALL
-,CAGE_DEPTH+REAR_WALL-rubber_feet_diameter,-RUBBER_FEET_DEPTH_N-spacer])
+         
+  translate([CAGE_WIDTH-xr
+,zd,y])
   feet(d_height, d_width, d_depth);
-  translate([0+rubber_feet_diameter+X_WALL,rubber_feet_diameter+D_SHIELD+REAR_WALL,-RUBBER_FEET_DEPTH_N-spacer])
+         
+  translate([xl,zu,y])
   feet(d_height, d_width, d_depth-spacer);
-  translate([CAGE_WIDTH+-rubber_feet_diameter-X_WALL,rubber_feet_diameter+D_SHIELD+REAR_WALL,-RUBBER_FEET_DEPTH_N-spacer])
+         
+  translate([CAGE_WIDTH+-xl,zu,y])
   feet(d_height, d_width, d_depth);
+      }
  
   }
   

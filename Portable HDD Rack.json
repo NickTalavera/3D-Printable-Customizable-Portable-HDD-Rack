@@ -18,11 +18,11 @@
             "rear_shield": "0",
             "rear_wall_thickness": "2.5",
             "rounding_radius": "0",
-            "rubber_feet_depth": "0.40000000000000002",
+            "rubber_feet_depth": "4",
             "rubber_feet_diameter": "5",
             "side_padding": "0.10000000000000001",
             "side_wall_thickness": "2.5",
-            "text_list": "80x15.5x110.6x3_Microx75x1x1 , 78.3x20.5x114.6x3_Microx75x1x1,75x7.3x107x3_Microx25x3x1,114.5x15.5x114.6xNonex25x3x1",
+            "text_list": "80x15.5x110.6x3_Microx75x1x1 , 78.3x20.5x114.6x3_Microx75x1x1,75x7.3x107x3_Microx25x3x1,",
             "top_bottom_wall_thickness": "2.5",
             "vertical_padding": "0.10000000000000001"
         }
