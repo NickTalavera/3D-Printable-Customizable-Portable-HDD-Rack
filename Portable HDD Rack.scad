@@ -90,13 +90,13 @@ text_list="
 
 
 //mm
-side_wall_thickness=2.5; //[0:0.1:6]
+side_wall_thickness=2.5; //[0.3:0.1:6]
 //mm
-top_bottom_wall_thickness=2.5; //[0:0.1:6]
+top_bottom_wall_thickness=2.5; //[0.3:0.1:6]
 //mm
-rear_wall_thickness=2.5; //[0:0.1:6]
+rear_wall_thickness=2.5; //[0.3:0.1:6]
 //mm on each side
-vertical_padding=0.1; //[0:0.1:16]
+vertical_padding=0.1; //[0.1:0.1:16]
 //mm on each side
 side_padding=0.1; //[0:0.1:6]
 //Depth of a rear shield in mm
@@ -142,9 +142,9 @@ MAX_BOX_HEIGHT = 88;
 color_start=0.5;
 spacer=0.01;
 RUBBER_FEET_DEPTH_N=rubber_feet_depth;
-REAR_WALL=min(max(rear_wall_thickness,spacer*2),250);
-Y_WALL=min(max(top_bottom_wall_thickness,spacer*2),250);
-X_WALL=min(max(side_wall_thickness,spacer*2),250);
+REAR_WALL=min(max(rear_wall_thickness,0.3),250);
+Y_WALL=min(max(top_bottom_wall_thickness,0.3),250);
+X_WALL=min(max(side_wall_thickness,0.3),250);
 SHIELD_DEPTH=min(max(rear_shield,0),250);
 Y_PAD = vertical_padding;
 X_PAD = side_padding;
@@ -188,11 +188,16 @@ if (ENABLE_DEBUGGING) {
 
 function height_to_index(to_index) = 
 sum([for (x=[0:1:to_index-1])
-struct_val(DATA_STRUCT[x][1],"count") * (x_at_index(x,"height_padded"))+(x==0 ? Y_WALL:x ==len(DATA_STRUCT)-1 ? Y_WALL: Y_WALL*2)])+FEET_VDIFF;
+struct_val(DATA_STRUCT[x][1],"count") * (x_at_index(x,"height_padded"))
++((len(DATA_STRUCT)-1)==x?Y_WALL:0)+((x==0)?FEET_VDIFF:0)
+]
 
 
-FEET_VDIFF = (RUBBER_FEET_DEPTH_N>Y_WALL ? (RUBBER_FEET_DEPTH_N-Y_WALL):0);
+) + FEET_VDIFF;
+//(x==0 ? Y_WALL:x ==len(DATA_STRUCT)-1 ? Y_WALL: Y_WALL*2)])
 
+FEET_VDIFF = max(RUBBER_FEET_DEPTH_N-Y_WALL,0);
+echo(FEET_VDIFF);
 TOTAL_COUNT = sum([for (x=[0:1:len(DATA_STRUCT)-1]) struct_val(DATA_STRUCT[x][1],"count")]);
 CAGE_HEIGHT = height_to_index(to_index=len(DATA_STRUCT));
 CAGE_WIDTH = max([for (x=[0:1:len(DATA_STRUCT)-1])
@@ -222,7 +227,7 @@ module container(kv){
   
   conn_height = struct_val(details, "conn_height");
   conn_width = struct_val(details, "conn_width");
-  full_height = drive_height+Y_WALL*2;
+  full_height = drive_height+Y_WALL;
   full_depth = d_depth+REAR_WALL;
   is_first_device_type= index==0;
   lr_adjust = left_align && (drive_width*2+W_WALL*2 != CAGE_WIDTH)  ? CAGE_WIDTH-drive_width-X_WALL*2: 0; // FIX
@@ -232,22 +237,17 @@ module container(kv){
     
     //make cubby
     
-    translate([0,0,FEET_VDIFF*2-Y_WALL])
+    translate([0,0,FEET_VDIFF-Y_WALL])
     for (curr_count=[0:1:count-1]) {
       first=curr_count==0 && is_first_device_type;
       last=curr_count==count-1 && index==len(DATA_STRUCT)-1;
-      accom_feet = RUBBER_FEET_DEPTH_N>Y_WALL && first;
-      accom_feet_addrive_height=(accom_feet?-FEET_VDIFF:0)+(first?Y_WALL:0);
-      
-      //Color as a ratio of the counts so far out of the total count
-      
-      translate([0, 0, height_so_far+full_height*curr_count])//MOVE CAGES UP/DOWN
-      
-      //    difference()
+      accom_feet_addrive_height=(first?-FEET_VDIFF:0)+(first?Y_WALL:0);
+      translate([0, 0, height_so_far+full_height*curr_count+(last?-Y_WALL:0)+(!first?+Y_WALL:0)])//MOVE CAGES UP/DOWN
+      difference()
       {
         
         translate([0,0,accom_feet_addrive_height])
-        //    difference()
+            difference()
         {
           // Hard Drive Slots
           // Outer Shell
@@ -258,19 +258,18 @@ module container(kv){
               cube([CAGE_WIDTH,CAGE_DEPTH,0]);
             }
             
-            color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)])
-            translate([0,0,-FEET_VDIFF+(!first?+Y_WALL:0)+(last?+Y_WALL:0)])
+            color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)]) //Color as a ratio of the counts so far out of the total count
+            translate([0,0,-FEET_VDIFF])
             if (rounding_radius == 0) {
-              
-              cube(size=[CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, full_height+(first?-Y_WALL:0)+(last?Y_WALL:0)-(accom_feet?-FEET_VDIFF:0)], center=false);
+              cube(size=[CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, full_height+(last?Y_WALL:0)+(first?FEET_VDIFF:0)], center=false);
             }
             else {
-              roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, full_height   ], center = false, radius = rounding_radius, apply_to = "all");
+              roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, full_height +(last?Y_WALL:0)+(first?FEET_VDIFF:0)  ], center = false, radius = rounding_radius, apply_to = "all");
             }
           }
           //Inner hollow
           color([1,0,0])
-          translate([X_PAD,0,(first?-Y_WALL:Y_WALL)+(!accom_feet?-FEET_VDIFF:0)+(last?+Y_WALL:0)])
+          translate([0,0,-Y_WALL+(!first?-FEET_VDIFF:0)])
           translate([0, SHIELD_DEPTH, 0])
           union () {
             translate([lr_adjust, CAGE_DEPTH-full_depth+REAR_WALL, +Y_WALL])
@@ -302,7 +301,7 @@ module container(kv){
     translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
     union() {
       zu=rubber_feet_diameter+SHIELD_DEPTH+REAR_WALL;
-      zd=CAGE_DEPTH-REAR_WALL-rubber_feet_diameter;
+      zd=CAGE_DEPTH-REAR_WALL+SHIELD_DEPTH-rubber_feet_diameter;
       y=-RUBBER_FEET_DEPTH_N-spacer;
       xr=rubber_feet_diameter+X_WALL;
       xl=rubber_feet_diameter+X_WALL;
