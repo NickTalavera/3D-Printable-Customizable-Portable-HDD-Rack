@@ -149,6 +149,7 @@ SHIELD_DEPTH=min(max(rear_shield,0),250);
 Y_PAD = vertical_padding;
 X_PAD = side_padding;
 
+
 USB_STRUCT = [
 ["c",[
 ["conn_height",USB_C_Height],
@@ -172,6 +173,8 @@ USB_STRUCT = [
 ];
 
 DATA_STRUCT=parse_input(text_list);
+MAX_INDEX=len(DATA_STRUCT)-1;
+COUNT_AT_MAX_INDEX=x_at_index(MAX_INDEX,"count");
 
 if (ENABLE_DEBUGGING) {
   echo(str("Your total height is ",CAGE_HEIGHT,"mm"));
@@ -186,30 +189,80 @@ if (ENABLE_DEBUGGING) {
 }
 
 
-function height_to_index(to_index) = 
-sum([for (x=[0:1:to_index-1])
-struct_val(DATA_STRUCT[x][1],"count") * (x_at_index(x,"height_padded"))
-+((len(DATA_STRUCT)-1)==x?Y_WALL:0)+((x==0)?FEET_VDIFF:0)
-]
+//function height_to_index(to_index,to_count) = 
+//sum([for (x=[0:1:to_index])
+//((x == to_index ? to_count: x_at_index(x,"count")) * (x_at_index(x,"height_padded")))
+//
+//+((MAX_INDEX)==x?Y_WALL:0)
+////+((x==0)&&(x_at_index(x,"count")==0)?FEET_VDIFF:0)
+////+((x>0)?Y_WALL:0)
+//])
+//+FEET_VDIFF
+//;
+
+function index_height(index,count)=
+let(
+d_height=x_at_index(index,"height_padded"),
+is_first=index==0 && count==1,
+max_index=MAX_INDEX,
+is_max_index = MAX_INDEX==index,
+is_last=is_max_index && count == COUNT_AT_MAX_INDEX,
+last_add = is_last ? 0 : 0,
+not_first_add = !is_first ? Y_WALL : 0,
+d_adj = (is_first ? 0: d_height)
+)
+
+d_adj
++ last_add
++ not_first_add
+;
+
+function height_to_index2(to_index,to_count) = 
+let (
+index_goal=min(to_index,MAX_INDEX)
+)
+[for (index=[0:1:index_goal]) 
+    [for (count=[1:1:(index == to_index ? min(to_count,x_at_index(index,"count")): x_at_index(index,"count"))]) 
+        index_height(index,count)
+    
+    ]]
 
 
-) + FEET_VDIFF;
-//(x==0 ? Y_WALL:x ==len(DATA_STRUCT)-1 ? Y_WALL: Y_WALL*2)])
+//])
+//
+;
+
+
+
+function height_to_index(to_index,to_count) = sum(
+flatten(height_to_index2(to_index,to_count)
+    ))
+    +FEET_VDIFF
+;
+
+
+//(x==0 ? Y_WALL:x ==MAX_INDEX ? Y_WALL: Y_WALL*2)])
 
 FEET_VDIFF = max(RUBBER_FEET_DEPTH_N-Y_WALL,0);
 echo(FEET_VDIFF);
-TOTAL_COUNT = sum([for (x=[0:1:len(DATA_STRUCT)-1]) struct_val(DATA_STRUCT[x][1],"count")]);
-CAGE_HEIGHT = height_to_index(to_index=len(DATA_STRUCT));
-CAGE_WIDTH = max([for (x=[0:1:len(DATA_STRUCT)-1])
+TOTAL_COUNT = sum([for (x=[0:1:MAX_INDEX]) struct_val(DATA_STRUCT[x][1],"count")]);
+echo("THERE",COUNT_AT_MAX_INDEX);
+echo("THERE",MAX_INDEX);
+echo("FEET_VDIFF",FEET_VDIFF);
+echo("Y_WALL",Y_WALL);
+CAGE_HEIGHT = height_to_index(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX);
+echo("FULL",height_to_index(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX));
+echo("FULL",sum(flatten(height_to_index2(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX))));
+CAGE_WIDTH = max([for (x=[0:1:MAX_INDEX])
 (struct_val(DATA_STRUCT[x][1],"width_padded")+X_WALL*2)]);
-CAGE_DEPTH = max([for (x=[0:1:len(DATA_STRUCT)-1])
+CAGE_DEPTH = max([for (x=[0:1:MAX_INDEX])
 (struct_val(DATA_STRUCT[x][1],"depth")+REAR_WALL)]);
 
 
 function x_at_index(index,val) =   struct_val(DATA_STRUCT[index][1],val) ;
 
-
-echo("H2I",height_to_index(to_index=1));
+echo("H2I0-0",height_to_index2(to_index=0, to_count=0));
+echo("H2I0-1",height_to_index2(to_index=0, to_count=1));
 echo("X@I",x_at_index(index=1,val="height_padded"));
 module container(kv){
   device_name = kv[0];
@@ -222,7 +275,6 @@ module container(kv){
   hUSB = struct_val(details, "hUSB");
   index = struct_val(details, "index");
   count = struct_val(details, "count");
-  height_so_far = height_to_index(to_index=index);
   count_so_far = sum([for (x=[0:1:index-1]) struct_val(DATA_STRUCT[x][1],"count")]);
   
   conn_height = struct_val(details, "conn_height");
@@ -236,27 +288,22 @@ module container(kv){
     
     
     //make cubby
-    
-    translate([0,0,FEET_VDIFF-Y_WALL])
-    for (curr_count=[0:1:count-1]) {
-      first=curr_count==0 && is_first_device_type;
-      last=curr_count==count-1 && index==len(DATA_STRUCT)-1;
-      accom_feet_addrive_height=(first?-FEET_VDIFF:0)+(first?Y_WALL:0);
-      translate([0, 0, height_so_far+full_height*curr_count+(last?-Y_WALL:0)+(!first?+Y_WALL:0)])//MOVE CAGES UP/DOWN
+    for (curr_count=[1:1:count]) {
+        echo("NOW_index",index);
+                echo("curr_count",curr_count);
+      height_so_far = height_to_index(to_index=index, to_count=curr_count);
+        echo("height_so_far",height_so_far);
+                echo("height_so_farv2",height_to_index2(to_index=index, to_count=curr_count));
+      first=curr_count==1 && index==0;
+      last=curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
+      translate([0, 0, height_so_far])//MOVE CAGES UP/DOWN
       difference()
       {
-        
-        translate([0,0,accom_feet_addrive_height])
             difference()
         {
           // Hard Drive Slots
           // Outer Shell
           union() {
-            
-            if (RUBBER_FEET_DEPTH_N>Y_WALL && first) {
-              
-              cube([CAGE_WIDTH,CAGE_DEPTH,0]);
-            }
             
             color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)]) //Color as a ratio of the counts so far out of the total count
             translate([0,0,-FEET_VDIFF])
@@ -386,6 +433,8 @@ module full_box(data_struct) {
 }
 
 full_box(DATA_STRUCT);
+
+
 //-------------------------
 // BOSL2 Functions
 // Copyright (c) 2017-2019, Revar Desmera
