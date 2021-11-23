@@ -213,17 +213,17 @@ module container(kv){
   conn_width = struct_val(details, "conn_width");
   full_height = d_height+H_PAD;
   full_depth = d_depth+REAR_WALL;
+  is_first_device_type= index==0;
   lr_adjust = left_align && (d_width+W_PAD != CAGE_WIDTH)  ? CAGE_WIDTH-d_width-W_PAD: 0;
-//        translate([0, D_SHIELD, FEET_VDIFF]);
     difference()
     {
   
 
   //make cubby
-        
+
           translate([0,0,FEET_VDIFF*2-Y_WALL])
   for (curr_count=[0:1:count-1]) {
-      first=curr_count==0 && index==0;
+      first=curr_count==0 && is_first_device_type;
       last=curr_count==count-1 && index==len(DATA_STRUCT)-1;
       accom_feet = RUBBER_FEET_DEPTH_N>Y_WALL && first;
       accom_feet_add_height=(accom_feet?-FEET_VDIFF:0)+(first?Y_WALL:0);
@@ -240,19 +240,20 @@ translate([0,0,accom_feet_add_height])
         // Hard Drive Slots
         // Outer Shell
           union() {
-              translate([0,0,-FEET_VDIFF])
-      if (RUBBER_FEET_DEPTH_N>Y_WALL) {
-          cube([CAGE_WIDTH,CAGE_DEPTH,FEET_VDIFF]);
+              
+      if (RUBBER_FEET_DEPTH_N>Y_WALL && first) {
+          cube([CAGE_WIDTH,CAGE_DEPTH,0]);
       }
+      translate([0,0,-FEET_VDIFF])
         if (rounding_radius == 0) {
-          cube(size=[CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height+(accom_feet?FEET_VDIFF:0)+(first?-Y_WALL:0)+(last?Y_WALL:0)], center=false);
+          cube(size=[CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height+(first?-Y_WALL:0)+(last?Y_WALL*2:0)-(accom_feet?-FEET_VDIFF:0)], center=false);
         }
         else {
           roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height   ], center = false, radius = rounding_radius, apply_to = "all");
         }
     }
         //Inner hollow
-        translate([0,0,(accom_feet?+FEET_VDIFF:0)+(first?-Y_WALL:0)])
+        translate([0,0,(first?-Y_WALL:0)+(!accom_feet?-FEET_VDIFF:0)])
         translate([0, D_SHIELD, 0])
         union () {
           translate([lr_adjust, CAGE_DEPTH-full_depth+REAR_WALL, +Y_WALL])
