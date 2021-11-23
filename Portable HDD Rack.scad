@@ -15,19 +15,21 @@ usb_details=struct_val(USB_STRUCT,usb_type),
 test2=assert(!is_undef(usb_type),str("Your USB type must be one of",struct_keys(USB_STRUCT))),
 conn_height=struct_val(usb_details,"conn_height"),
 conn_width=struct_val(usb_details,"conn_width"),
-d_height=max(details[1],is_def(conn_height) ? conn_height: 0)+vertical_padding*2,
-
-d_width=max(details[0],(is_def(conn_width) ? conn_width: 0))+side_padding*2,
-vUSB=max(min(details[5],d_height),-Y_WALL),
-hUSB=max(min(details[4],d_width-(is_def(conn_width) ? conn_width: 0)),-X_WALL),
+drive_height=details[1],
+drive_height_padded=max(drive_height,is_def(conn_height) ? conn_height: 0)+Y_PAD*2,
+drive_width_padded=max(details[0],(is_def(conn_width) ? conn_width: 0))+X_PAD*2,
+vUSB=max(min(details[5],drive_height_padded),-Y_WALL),
+hUSB=max(min(details[4],drive_width_padded-(is_def(conn_width) ? conn_width: 0)),-X_WALL),
 d_depth=details [2],
 new_struct=struct_set(struct,
-["width",d_width,
+["width_padded",drive_width_padded,
+"width_unpadded",details[0],
 "depth",d_depth,
 "type",usb_type,
 "conn_height",conn_height,
-"conn_width",conn_width,
-"height",d_height,
+"conn_width",drive_width_padded,
+"height_padded",drive_height_padded,
+"height_unpadded",drive_height,
 "vUSB",vUSB,
 "hUSB",hUSB,
 "count",details[6],
@@ -43,11 +45,11 @@ function parse_input(hole_list_str)=
 let (
 struct=[],
 strip_outer=str_strip(hole_list_str," ,"),
-    q=echo(strip_outer),
+//    q=echo(strip_outer),
 split_by_comma=str_split(strip_outer, ",", true),
-    f=echo(split_by_comma),
+//    f=echo(split_by_comma),
 split_out=[for (x=split_by_comma) str_split(str_strip(x, " m"), "x", false)],
-    z=echo(split_out),
+//    z=echo(split_out),
 to_float=[for (x=split_out) [for (y=x) if(is_num(str_float(y))) str_float(y) else y]],
 to_struct=[for (index=[0:1:len(to_float)-1]) input_to_struct(to_float[index],index=index)]
 )
@@ -68,18 +70,18 @@ assert(tester): show_if_pass || show_if_pass ? echo(textin): undef
 // mm units
 // <W>x<H>x<D>x<C|Micro|3_Micro|Mini|None>x<X USB Coords>x<Y USB Coords>x<COUNT>
 text_list="
-80x15.5x110.6x3_Microx75x1x1 , 
-78.3x20.5x114.6x3_Microx75x1x1,
-75x7.3x107x3_Microx25x3x1,
+80.3x15.7x110.6x3_Microx75x1x1,
+78.5x20.7x114.6x3_Microx75x1x1,
+75x9.2x107x3_Microx25x3x1
 ";
 
 // EXAMPLES
-// WD Ultra
-// 80x15.5x110.6x3_Microx75x1x1
+// WD My Passport Ultra
+// 80.3x15.7x110.6x3_Microx75x1x1
 // Seagate Backup Plus
-// 78.3x20.5x114.6x3_Microx75x1x1
+// 78.5x20.7x114.6x3_Microx75x1x1
 // Toshiba
-// 75x7.3x107x3_Microx25x3x1
+// 75x9.2x107x3_Microx25x3x1
 // Empty
 // 114.5x15.5x114.6xNonex25x3x1
 
@@ -93,9 +95,9 @@ side_wall_thickness=2.5; //[0:0.1:6]
 top_bottom_wall_thickness=2.5; //[0:0.1:6]
 //mm
 rear_wall_thickness=2.5; //[0:0.1:6]
-//mm
-vertical_padding=0.1; //[0:0.1:1]
-//mm
+//mm on each side
+vertical_padding=0.1; //[0:0.1:16]
+//mm on each side
 side_padding=0.1; //[0:0.1:6]
 //Depth of a rear shield in mm
 rear_shield=0; //[0:1:60]
@@ -143,9 +145,9 @@ RUBBER_FEET_DEPTH_N=rubber_feet_depth;
 REAR_WALL=min(max(rear_wall_thickness,spacer*2),250);
 Y_WALL=min(max(top_bottom_wall_thickness,spacer*2),250);
 X_WALL=min(max(side_wall_thickness,spacer*2),250);
-D_SHIELD=min(max(rear_shield,0),250);
-H_PAD = Y_WALL*2;
-W_PAD = X_WALL*2;
+SHIELD_DEPTH=min(max(rear_shield,0),250);
+Y_PAD = vertical_padding;
+X_PAD = side_padding;
 
 USB_STRUCT = [
 ["c",[
@@ -184,168 +186,185 @@ if (ENABLE_DEBUGGING) {
 }
 
 
+function height_to_index(to_index) = 
+sum([for (x=[0:1:to_index-1])
+struct_val(DATA_STRUCT[x][1],"count") * (x_at_index(x,"height_padded"))+(x==0 ? Y_WALL:x ==len(DATA_STRUCT)-1 ? Y_WALL: Y_WALL*2)])+FEET_VDIFF;
+
+
 FEET_VDIFF = (RUBBER_FEET_DEPTH_N>Y_WALL ? (RUBBER_FEET_DEPTH_N-Y_WALL):0);
 
 TOTAL_COUNT = sum([for (x=[0:1:len(DATA_STRUCT)-1]) struct_val(DATA_STRUCT[x][1],"count")]);
-CAGE_HEIGHT = sum([for (x=[0:1:len(DATA_STRUCT)-1])
-struct_val(DATA_STRUCT[x][1],"count") * (struct_val(DATA_STRUCT[x][1],"height")+H_PAD)])+FEET_VDIFF;
+CAGE_HEIGHT = height_to_index(to_index=len(DATA_STRUCT));
 CAGE_WIDTH = max([for (x=[0:1:len(DATA_STRUCT)-1])
-(struct_val(DATA_STRUCT[x][1],"width")+W_PAD)]);
+(struct_val(DATA_STRUCT[x][1],"width_padded")+X_WALL*2)]);
 CAGE_DEPTH = max([for (x=[0:1:len(DATA_STRUCT)-1])
 (struct_val(DATA_STRUCT[x][1],"depth")+REAR_WALL)]);
 
+
+function x_at_index(index,val) =   struct_val(DATA_STRUCT[index][1],val) ;
+
+
+echo("H2I",height_to_index(to_index=1));
+echo("X@I",x_at_index(index=1,val="height_padded"));
 module container(kv){
   device_name = kv[0];
   details = kv[1];
-  d_height = struct_val(details, "height");
-  d_width = struct_val(details, "width");
+  drive_height = struct_val(details, "height_padded");
+  drive_width = struct_val(details, "width_padded");
   d_depth = struct_val(details, "depth");
   USB_type = struct_val(details, "type");
   vUSB = struct_val(details, "vUSB");
   hUSB = struct_val(details, "hUSB");
   index = struct_val(details, "index");
   count = struct_val(details, "count");
-  height_so_far = sum([for (x=[0:1:index-1])
-  struct_val(DATA_STRUCT[x][1],"count") * (struct_val(DATA_STRUCT[x][1],"height")+H_PAD)]);
+  height_so_far = height_to_index(to_index=index);
   count_so_far = sum([for (x=[0:1:index-1]) struct_val(DATA_STRUCT[x][1],"count")]);
   
   conn_height = struct_val(details, "conn_height");
   conn_width = struct_val(details, "conn_width");
-  full_height = d_height+H_PAD;
+  full_height = drive_height+Y_WALL*2;
   full_depth = d_depth+REAR_WALL;
   is_first_device_type= index==0;
-  lr_adjust = left_align && (d_width+W_PAD != CAGE_WIDTH)  ? CAGE_WIDTH-d_width-W_PAD: 0;
-    difference()
-    {
-  
-
-  //make cubby
-
-          translate([0,0,FEET_VDIFF*2-Y_WALL])
-  for (curr_count=[0:1:count-1]) {
+  lr_adjust = left_align && (drive_width*2+W_WALL*2 != CAGE_WIDTH)  ? CAGE_WIDTH-drive_width-X_WALL*2: 0; // FIX
+  difference()
+  {
+    
+    
+    //make cubby
+    
+    translate([0,0,FEET_VDIFF*2-Y_WALL])
+    for (curr_count=[0:1:count-1]) {
       first=curr_count==0 && is_first_device_type;
       last=curr_count==count-1 && index==len(DATA_STRUCT)-1;
       accom_feet = RUBBER_FEET_DEPTH_N>Y_WALL && first;
-      accom_feet_add_height=(accom_feet?-FEET_VDIFF:0)+(first?Y_WALL:0);
+      accom_feet_addrive_height=(accom_feet?-FEET_VDIFF:0)+(first?Y_WALL:0);
       
-    //Color as a ratio of the counts so far out of the total count
-          color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)])
-      translate([0, 0, height_so_far+full_height*curr_count])
-    
-    difference()
-    {
-translate([0,0,accom_feet_add_height])
-      difference()
+      //Color as a ratio of the counts so far out of the total count
+      
+      translate([0, 0, height_so_far+full_height*curr_count])//MOVE CAGES UP/DOWN
+      
+      //    difference()
       {
-        // Hard Drive Slots
-        // Outer Shell
+        
+        translate([0,0,accom_feet_addrive_height])
+        //    difference()
+        {
+          // Hard Drive Slots
+          // Outer Shell
           union() {
+            
+            if (RUBBER_FEET_DEPTH_N>Y_WALL && first) {
               
-      if (RUBBER_FEET_DEPTH_N>Y_WALL && first) {
-          cube([CAGE_WIDTH,CAGE_DEPTH,0]);
-      }
-      translate([0,0,-FEET_VDIFF])
-        if (rounding_radius == 0) {
-          cube(size=[CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height+(first?-Y_WALL:0)+(last?Y_WALL*2:0)-(accom_feet?-FEET_VDIFF:0)], center=false);
+              cube([CAGE_WIDTH,CAGE_DEPTH,0]);
+            }
+            
+            color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)])
+            translate([0,0,-FEET_VDIFF+(!first?+Y_WALL:0)+(last?+Y_WALL:0)])
+            if (rounding_radius == 0) {
+              
+              cube(size=[CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, full_height+(first?-Y_WALL:0)+(last?Y_WALL:0)-(accom_feet?-FEET_VDIFF:0)], center=false);
+            }
+            else {
+              roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, full_height   ], center = false, radius = rounding_radius, apply_to = "all");
+            }
+          }
+          //Inner hollow
+          color([1,0,0])
+          translate([X_PAD,0,(first?-Y_WALL:Y_WALL)+(!accom_feet?-FEET_VDIFF:0)+(last?+Y_WALL:0)])
+          translate([0, SHIELD_DEPTH, 0])
+          union () {
+            translate([lr_adjust, CAGE_DEPTH-full_depth+REAR_WALL, +Y_WALL])
+            cubby(conn_height,conn_width, drive_height+spacer, drive_width, d_depth+SHIELD_DEPTH+REAR_WALL+spacer,USB_type,vUSB,hUSB);
+            
+            
+          }
         }
-        else {
-          roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+D_SHIELD, full_height   ], center = false, radius = rounding_radius, apply_to = "all");
-        }
-    }
-        //Inner hollow
-        translate([0,0,(first?-Y_WALL:0)+(!accom_feet?-FEET_VDIFF:0)])
-        translate([0, D_SHIELD, 0])
-        union () {
-          translate([lr_adjust, CAGE_DEPTH-full_depth+REAR_WALL, +Y_WALL])
-          cubby(conn_height,conn_width, d_height+spacer, d_width, d_depth,USB_type,vUSB,hUSB);
-          
-          
-        }
+        
+        
+        
       }
       
       
-
     }
     
-    
-  }
-  
-  //      // Make rear shield
-      if (D_SHIELD > 0) {
+    //      // Make rear shield
+    if (SHIELD_DEPTH > 0) {
       translate([X_WALL, -0.1, -Y_WALL])
+      color([1,0.5,0])
       cube(size=[
-      CAGE_WIDTH-X_WALL*2,D_SHIELD,CAGE_HEIGHT
+      CAGE_WIDTH-X_WALL*2,SHIELD_DEPTH,CAGE_HEIGHT
       ], center=false);
-      }
+    }
+    
+    
+    // Add feet
+    
+    translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
+    union() {
+      zu=rubber_feet_diameter+SHIELD_DEPTH+REAR_WALL;
+      zd=CAGE_DEPTH-REAR_WALL-rubber_feet_diameter;
+      y=-RUBBER_FEET_DEPTH_N-spacer;
+      xr=rubber_feet_diameter+X_WALL;
+      xl=rubber_feet_diameter+X_WALL;
+      translate([xr,zd,y])
+      feet(drive_height, drive_width, d_depth+spacer);
       
+      translate([CAGE_WIDTH-xr,zd,y])
+      feet(drive_height, drive_width, d_depth+spacer);
       
-  // Add feet
-      translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
-     union() {
-         zu=rubber_feet_diameter+D_SHIELD+REAR_WALL;
-         zd=CAGE_DEPTH-REAR_WALL-rubber_feet_diameter;
-         y=-RUBBER_FEET_DEPTH_N-spacer;
-         xr=rubber_feet_diameter+X_WALL;
-         xl=rubber_feet_diameter+X_WALL;
-  translate([xr,zd,y])
-  feet(d_height, d_width, d_depth+spacer);
-         
-  translate([CAGE_WIDTH-xr,zd,y])
-  feet(d_height, d_width, d_depth+spacer);
-         
-  translate([xl,zu,y])
-  feet(d_height, d_width, d_depth+spacer);
-         
-  translate([CAGE_WIDTH+-xl,zu,y])
-  feet(d_height, d_width, d_depth+spacer);
-      }
- 
+      translate([xl,zu,y])
+      feet(drive_height, drive_width, d_depth+spacer);
+      
+      translate([CAGE_WIDTH+-xl,zu,y])
+      feet(drive_height, drive_width, d_depth+spacer);
+    }
+    
   }
   
 }
-module feet(d_height, d_width, d_depth) {
-    
-        translate([ 0,0,0])
-    cylinder(r=rubber_feet_diameter, h=RUBBER_FEET_DEPTH_N, center=false);
-    
+module feet(drive_height, drive_width, d_depth) {
+  
+  translate([ 0,0,0])
+  cylinder(r=rubber_feet_diameter, h=RUBBER_FEET_DEPTH_N, center=false);
+  
 }
 
-module cubby(conn_height,conn_width, d_height, d_width, d_depth,USB_type,vUSB,hUSB) {
-  conn_depth = CAGE_DEPTH+REAR_WALL;
+module cubby(conn_height,conn_width, drive_height, drive_width, d_depth,USB_type,vUSB,hUSB) {
+  conn_depth = CAGE_DEPTH+REAR_WALL*2;
   hull()
   {
     translate([X_WALL, REAR_WALL, Y_WALL])
-    cube(size=[d_width, d_depth, d_height], center=false);
+    cube(size=[drive_width, d_depth, drive_height], center=false);
   }
   
   if (is_def(conn_height) && is_def(conn_width)) {
     hull() {
-      translate([X_WALL+hUSB + side_padding,
+      translate([X_WALL+hUSB + X_PAD,
       
-      REAR_WALL*3,
+      conn_depth/2-REAR_WALL,
       
-      -vertical_padding+Y_WALL+vUSB
+      vUSB+      Y_WALL //-Y_PAD
       ])
       
-      port(d_height, d_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
+      port(drive_height, drive_width, d_depth,conn_height,conn_width,conn_depth+REAR_WALL+spacer,vUSB,hUSB);
       
       
-//      if (vUSB< max(conn_height,conn_width)/2) {
-//        translate([X_WALL+hUSB + side_padding,
-//        
-//        REAR_WALL*3,
-//        (conn_height>=conn_width ? conn_width/2:conn_height/2)+
-//        -vertical_padding+Y_WALL //+vUSB
-//        ])
-//        port(d_height, d_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
-//      }
+      //      if (vUSB< max(conn_height,conn_width)/2) {
+      //        translate([X_WALL+hUSB + X_PAD,
+      //        
+      //        REAR_WALL*3,
+      //        (conn_height>=conn_width ? conn_width/2:conn_height/2)+
+      //        -Y_PAD+Y_WALL //+vUSB
+      //        ])
+      //        port(drive_height, drive_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
+      //      }
     }
   }
 }
 
 
 
-module port(d_height, d_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB) {
+module port(drive_height, drive_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB) {
   hole_radius = conn_height>conn_width? conn_width/2 :conn_height/2;
   //ruler(3,20);
   rotate([90,0,0])
