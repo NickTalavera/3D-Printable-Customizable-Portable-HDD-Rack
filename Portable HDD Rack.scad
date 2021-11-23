@@ -179,7 +179,8 @@ COUNT_AT_MAX_INDEX=x_at_index(MAX_INDEX,"count");
 if (ENABLE_DEBUGGING) {
   echo(str("Your total height is ",CAGE_HEIGHT,"mm"));
   echo(str("Your total width is ",CAGE_WIDTH,"mm"));
-  echo(str("Your data is ",DATA_STRUCT));
+  echo(str("Top bottom wall thickness ",Y_WALL));
+  echo(str("Vertical padding ",Y_PAD));
   for (kv=DATA_STRUCT){
     details = kv[1];
     usb_type=struct_val(details,"type");
@@ -204,12 +205,16 @@ function index_height(index,count)=
 let(
 d_height=x_at_index(index,"height_padded"),
 is_first=index==0 && count==1,
+//f=echo(index,count,is_first),
 max_index=MAX_INDEX,
 is_max_index = MAX_INDEX==index,
 is_last=is_max_index && count == COUNT_AT_MAX_INDEX,
+//if max count find next index first count
 last_add = is_last ? 0 : 0,
 not_first_add = !is_first ? Y_WALL : 0,
-d_adj = (is_first ? 0: d_height)
+d_adj = is_first ? 0:
+count==1 ? x_at_index(index-1,"height_padded"):
+d_height
 )
 
 d_adj
@@ -246,13 +251,11 @@ flatten(height_to_index2(to_index,to_count)
 FEET_VDIFF = max(RUBBER_FEET_DEPTH_N-Y_WALL,0);
 echo(FEET_VDIFF);
 TOTAL_COUNT = sum([for (x=[0:1:MAX_INDEX]) struct_val(DATA_STRUCT[x][1],"count")]);
-echo("THERE",COUNT_AT_MAX_INDEX);
-echo("THERE",MAX_INDEX);
 echo("FEET_VDIFF",FEET_VDIFF);
 echo("Y_WALL",Y_WALL);
 CAGE_HEIGHT = height_to_index(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX);
 echo("FULL",height_to_index(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX));
-echo("FULL",sum(flatten(height_to_index2(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX))));
+echo("FULL",height_to_index2(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX));
 CAGE_WIDTH = max([for (x=[0:1:MAX_INDEX])
 (struct_val(DATA_STRUCT[x][1],"width_padded")+X_WALL*2)]);
 CAGE_DEPTH = max([for (x=[0:1:MAX_INDEX])
@@ -289,11 +292,10 @@ module container(kv){
     
     //make cubby
     for (curr_count=[1:1:count]) {
-        echo("NOW_index",index);
-                echo("curr_count",curr_count);
+//        echo("NOW_index",index);
+//                echo("curr_count",curr_count);
       height_so_far = height_to_index(to_index=index, to_count=curr_count);
-        echo("height_so_far",height_so_far);
-                echo("height_so_farv2",height_to_index2(to_index=index, to_count=curr_count));
+                echo("height_so_far",height_so_far);
       first=curr_count==1 && index==0;
       last=curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
       translate([0, 0, height_so_far])//MOVE CAGES UP/DOWN
@@ -304,14 +306,14 @@ module container(kv){
           // Hard Drive Slots
           // Outer Shell
           union() {
-            
+            cube_height = full_height+(last?Y_WALL:0)+(first?FEET_VDIFF:0);
             color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)]) //Color as a ratio of the counts so far out of the total count
             translate([0,0,-FEET_VDIFF])
             if (rounding_radius == 0) {
-              cube(size=[CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, full_height+(last?Y_WALL:0)+(first?FEET_VDIFF:0)], center=false);
+              cube(size=[CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, cube_height], center=false);
             }
             else {
-              roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, full_height +(last?Y_WALL:0)+(first?FEET_VDIFF:0)  ], center = false, radius = rounding_radius, apply_to = "all");
+              roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, cube_height  ], center = false, radius = rounding_radius, apply_to = "all");
             }
           }
           //Inner hollow
