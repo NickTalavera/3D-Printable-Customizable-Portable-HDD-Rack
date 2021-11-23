@@ -190,26 +190,14 @@ if (ENABLE_DEBUGGING) {
 }
 
 
-//function height_to_index(to_index,to_count) = 
-//sum([for (x=[0:1:to_index])
-//((x == to_index ? to_count: x_at_index(x,"count")) * (x_at_index(x,"height_padded")))
-//
-//+((MAX_INDEX)==x?Y_WALL:0)
-////+((x==0)&&(x_at_index(x,"count")==0)?FEET_VDIFF:0)
-////+((x>0)?Y_WALL:0)
-//])
-//+FEET_VDIFF
-//;
-
 function index_height(index,count)=
 let(
 d_height=x_at_index(index,"height_padded"),
 is_first=index==0 && count==1,
-//f=echo(index,count,is_first),
 max_index=MAX_INDEX,
 is_max_index = MAX_INDEX==index,
 is_last=is_max_index && count == COUNT_AT_MAX_INDEX,
-//if max count find next index first count
+
 last_add = is_last ? 0 : 0,
 not_first_add = !is_first ? Y_WALL : 0,
 d_adj = is_first ? 0:
@@ -232,9 +220,6 @@ index_goal=min(to_index,MAX_INDEX)
     
     ]]
 
-
-//])
-//
 ;
 
 
@@ -244,9 +229,6 @@ flatten(height_to_index2(to_index,to_count)
     ))
     +FEET_VDIFF
 ;
-
-
-//(x==0 ? Y_WALL:x ==MAX_INDEX ? Y_WALL: Y_WALL*2)])
 
 FEET_VDIFF = max(RUBBER_FEET_DEPTH_N-Y_WALL,0);
 echo(FEET_VDIFF);
@@ -285,7 +267,7 @@ module container(kv){
   full_height = drive_height+Y_WALL;
   full_depth = d_depth+REAR_WALL;
   is_first_device_type= index==0;
-  lr_adjust = left_align && (drive_width*2+W_WALL*2 != CAGE_WIDTH)  ? CAGE_WIDTH-drive_width-X_WALL*2: 0; // FIX
+  lr_adjust = left_align && (drive_width*2+X_WALL*2 != CAGE_WIDTH)  ? CAGE_WIDTH-drive_width-X_WALL*2: 0; // FIX
   difference()
   {
     
@@ -319,20 +301,10 @@ module container(kv){
           //Inner hollow
           color([1,0,0])
           translate([0,0,-Y_WALL+(!first?-FEET_VDIFF:0)])
-          translate([0, SHIELD_DEPTH, 0])
-          union () {
-            translate([lr_adjust, CAGE_DEPTH-full_depth+REAR_WALL, +Y_WALL])
-            cubby(conn_height,conn_width, drive_height+spacer, drive_width, d_depth+SHIELD_DEPTH+REAR_WALL+spacer,USB_type,vUSB,hUSB);
-            
-            
-          }
+            translate([lr_adjust, CAGE_DEPTH-d_depth+SHIELD_DEPTH, +Y_WALL])
+            cubby(conn_height,conn_width, drive_height+spacer, drive_width, d_depth,USB_type,vUSB,hUSB);
         }
-        
-        
-        
       }
-      
-      
     }
     
     //      // Make rear shield
@@ -378,7 +350,7 @@ module feet(drive_height, drive_width, d_depth) {
 }
 
 module cubby(conn_height,conn_width, drive_height, drive_width, d_depth,USB_type,vUSB,hUSB) {
-  conn_depth = CAGE_DEPTH+REAR_WALL*2;
+  conn_depth = CAGE_DEPTH-d_depth+SHIELD_DEPTH+REAR_WALL*2+spacer*2;
   hull()
   {
     translate([X_WALL, REAR_WALL, Y_WALL])
@@ -389,34 +361,34 @@ module cubby(conn_height,conn_width, drive_height, drive_width, d_depth,USB_type
     hull() {
       translate([X_WALL+hUSB + X_PAD,
       
-      conn_depth/2-REAR_WALL,
+//      -(CAGE_DEPTH-d_depth+SHIELD_DEPTH)
+        REAR_WALL*2
+        ,
       
       vUSB+      Y_WALL //-Y_PAD
       ])
       
-      port(drive_height, drive_width, d_depth,conn_height,conn_width,conn_depth+REAR_WALL+spacer,vUSB,hUSB);
+      port( conn_height,conn_width,conn_depth,vUSB,hUSB);
       
       
-      //      if (vUSB< max(conn_height,conn_width)/2) {
-      //        translate([X_WALL+hUSB + X_PAD,
-      //        
-      //        REAR_WALL*3,
-      //        (conn_height>=conn_width ? conn_width/2:conn_height/2)+
-      //        -Y_PAD+Y_WALL //+vUSB
-      //        ])
-      //        port(drive_height, drive_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
-      //      }
+//            if (vUSB< max(conn_height,conn_width)/2) {
+//              translate([X_WALL+hUSB + X_PAD,
+//              
+//              REAR_WALL*3,
+//              (conn_height>=conn_width ? conn_width/2:conn_height/2)+
+//              -Y_PAD+Y_WALL //+vUSB
+//              ])
+//              port(drive_height, drive_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
+//            }
     }
   }
 }
 
 
 
-module port(drive_height, drive_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB) {
+module port(  conn_height,conn_width,conn_depth,vUSB,hUSB) {
   hole_radius = conn_height>conn_width? conn_width/2 :conn_height/2;
-  //ruler(3,20);
   rotate([90,0,0])
-  
   hull()
   {
     translate([ conn_height<=conn_width ? conn_height/2-hole_radius:0,conn_height>conn_width ? conn_height/2-hole_radius:0,0])
