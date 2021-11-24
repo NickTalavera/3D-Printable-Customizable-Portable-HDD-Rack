@@ -14,7 +14,7 @@
             "USB_Micro_Width": "10.6",
             "USB_Mini_Height": "6",
             "USB_Mini_Width": "10",
-            "left_align": "true",
+            "left_align": "false",
             "rear_shield": "60",
             "rear_wall_thickness": "2.2999999999999998",
             "rounding_radius": "0",
