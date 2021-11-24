@@ -181,6 +181,8 @@ if (ENABLE_DEBUGGING) {
   echo(str("Your total width is ",CAGE_WIDTH,"mm"));
   echo(str("Top bottom wall thickness ",Y_WALL));
   echo(str("Vertical padding ",Y_PAD));
+  echo(str("MAX_INDEX ",Y_PAD));
+  echo(str("COUNT_AT_MAX_INDEX ",COUNT_AT_MAX_INDEX));
   for (kv=DATA_STRUCT){
     details = kv[1];
     usb_type=struct_val(details,"type");
@@ -192,66 +194,64 @@ if (ENABLE_DEBUGGING) {
 
 function index_height(index,count)=
 let(
+test1=assert(count<=x_at_index(index,"count")),
 d_height=x_at_index(index,"height_padded"),
 is_first=index==0 && count==1,
 max_index=MAX_INDEX,
 is_max_index = MAX_INDEX==index,
 is_last=is_max_index && count == COUNT_AT_MAX_INDEX,
 
-last_add = is_last ? 0 : 0,
-not_first_add = !is_first ? Y_WALL : 0,
-//d_adj = d_height
+last_add = is_last ? Y_WALL : 0,
+first_add = is_first ? FEET_VDIFF : 0,
 d_adj = 
-//count==1 ? x_at_index(index-1,"height_padded"):
 d_height
 )
 
 d_adj
 + last_add
-+ not_first_add
++ Y_WALL
++first_add
 ;
 
-function height_to_index2(to_index,to_count) = 
+function height_to_index2(to_index,to_count,include=false) = 
 let (
 index_goal=min(to_index,MAX_INDEX),
-past_first=to_index>=0 && to_count>=1,
+to_count_N=to_count,
+past_first=to_index>=0 && to_count_N>=1,
 f_sub=past_first ? index_height(0,1): 0,
-z=echo("f_sub",f_sub),
-//l_sub=count==1 ? x_at_index(index-1,"height_padded"): 0,
-)
-[for (index=[0:1:index_goal]) 
-    [for (count=[1:1:(index == to_index ? min(to_count,x_at_index(index,"count")): x_at_index(index,"count"))]) 
-       
-    
--(    (index==0 && count>=1) ? f_sub: 0) + 
-(   (index>=1 && count>=1) ?  index_height(index-1,"height_padded"): 
+r=[for (index=[0:1:index_goal]) [for (count=[
+    1:1: 
+    (
+to_index == index ? to_count_N :
+x_at_index(index,"count"))
+])
     index_height(index,count) 
-    )
 
-    ]]
-
+    ]],
+rb=flatten(r),
+rd=list_remove(rb,0),
+re=include ? rd: list_remove(rd,len(rd)-1),
+)
+re
 ;
 
 
-
-function height_to_index(to_index,to_count) = sum(
-flatten(height_to_index2(to_index,to_count)
-    ))
-    +FEET_VDIFF
-;
+function height_to_index(to_index,to_count,include=false) = sum(
+flatten(height_to_index2(to_index,to_count,include=include)
+    ));
 
 FEET_VDIFF = max(RUBBER_FEET_DEPTH_N-Y_WALL,0);
 echo(FEET_VDIFF);
 TOTAL_COUNT = sum([for (x=[0:1:MAX_INDEX]) struct_val(DATA_STRUCT[x][1],"count")]);
 echo("FEET_VDIFF",FEET_VDIFF);
 echo("Y_WALL",Y_WALL);
-CAGE_HEIGHT = height_to_index(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX);
+CAGE_HEIGHT = height_to_index(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX,include=true);
 echo("FULL",height_to_index(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX));
 echo("FULL",height_to_index2(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX));
 CAGE_WIDTH = max([for (x=[0:1:MAX_INDEX])
 (struct_val(DATA_STRUCT[x][1],"width_padded")+X_WALL*2)]);
 CAGE_DEPTH = max([for (x=[0:1:MAX_INDEX])
-(struct_val(DATA_STRUCT[x][1],"depth")+REAR_WALL)]);
+(struct_val(DATA_STRUCT[x][1],"depth")+REAR_WALL)])+SHIELD_DEPTH;
 
 
 function x_at_index(index,val) =   struct_val(DATA_STRUCT[index][1],val) ;
@@ -285,11 +285,9 @@ module container(kv){
     //make cubby
       union() {
 //      union() {
-//cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height,USB_type, drive_width,vUSB,hUSB);
-      translate([CAGE_WIDTH,0,0])
 cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height,USB_type, drive_width,vUSB,hUSB);
-//      }
-      cube([CAGE_WIDTH,CAGE_DEPTH,CAGE_HEIGHT]);
+//      translate([CAGE_WIDTH,0,0])
+//      cube([CAGE_WIDTH,CAGE_DEPTH,CAGE_HEIGHT]);
   }
       
       
@@ -317,14 +315,14 @@ cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height,USB_ty
   
       
     //      // Make rear shield
-//    if (SHIELD_DEPTH > 0) {
-//      translate([X_WALL, -0.1, -Y_WALL])
-//      color([1,0.5,0])
-//      cube(size=[
-//      CAGE_WIDTH-X_WALL*2,SHIELD_DEPTH,CAGE_HEIGHT
-//      ], center=false);
-//    }
-//    
+    if (SHIELD_DEPTH > 0) {
+      translate([X_WALL, -0.1, -Y_WALL])
+      color([1,0.5,0])
+      cube(size=[
+      CAGE_WIDTH-X_WALL*2,SHIELD_DEPTH,CAGE_HEIGHT
+      ], center=false);
+    }
+    
     
     // Add feet
     
@@ -362,8 +360,6 @@ module cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height
       lr_adjust = left_align && (drive_width*2+X_WALL*2 != CAGE_WIDTH)  ? CAGE_WIDTH-drive_width-X_WALL*2: 0;     
       
     for (curr_count=[1:1:count]) {
-//        echo("NOW_index",index);
-//                echo("curr_count",curr_count);
       height_so_far = height_to_index(to_index=index, to_count=curr_count);
                 echo("height_so_far",height_so_far);
       first=curr_count==1 && index==0;
@@ -380,10 +376,10 @@ module cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height
             color([0,color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start),color_start+((count_so_far+curr_count)/TOTAL_COUNT)*(1-color_start)]) //Color as a ratio of the counts so far out of the total count
             translate([0,0,-FEET_VDIFF])
             if (rounding_radius == 0) {
-              cube(size=[CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, cube_height], center=false);
+              cube(size=[CAGE_WIDTH, CAGE_DEPTH, cube_height], center=false);
             }
             else {
-              roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH+SHIELD_DEPTH, cube_height  ], center = false, radius = rounding_radius, apply_to = "all");
+              roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH, cube_height  ], center = false, radius = rounding_radius, apply_to = "all");
             }
           }
           
@@ -391,7 +387,7 @@ module cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height
           //Inner hollow
           color([1,0,0])
           translate([0,0,-Y_WALL+(!first?-FEET_VDIFF:0)])
-            translate([lr_adjust, CAGE_DEPTH-d_depth+SHIELD_DEPTH, +Y_WALL])
+            translate([lr_adjust, CAGE_DEPTH-d_depth, +Y_WALL])
             cubby(conn_height,conn_width, drive_height+spacer, drive_width, d_depth,USB_type,vUSB,hUSB);
           
         }
