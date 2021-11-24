@@ -204,14 +204,10 @@ is_first=index==0 && count==1,
 max_index=MAX_INDEX,
 is_max_index = MAX_INDEX==index,
 is_last=is_max_index && count == COUNT_AT_MAX_INDEX,
-
 last_add = is_last ? Y_WALL : 0,
-first_add = is_first ? FEET_VDIFF : 0,
-d_adj = 
-d_height
+first_add = is_first ? FEET_VDIFF : 0
 )
-
-d_adj
+d_height
 + last_add
 + Y_WALL
 +first_add
@@ -244,13 +240,8 @@ flatten(height_to_index2(to_index,to_count,include=include)
 ));
 
 FEET_VDIFF = max(RUBBER_FEET_DEPTH_N-Y_WALL,0);
-echo(FEET_VDIFF);
 TOTAL_COUNT = sum([for (x=[0:1:MAX_INDEX]) struct_val(DATA_STRUCT[x][1],"count")]);
-echo("FEET_VDIFF",FEET_VDIFF);
-echo("Y_WALL",Y_WALL);
 CAGE_HEIGHT = height_to_index(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX,include=true);
-echo("FULL",height_to_index(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX));
-echo("FULL",height_to_index2(to_index=MAX_INDEX,to_count= COUNT_AT_MAX_INDEX));
 CAGE_WIDTH = max([for (x=[0:1:MAX_INDEX])
 (struct_val(DATA_STRUCT[x][1],"width_padded")+X_WALL*2)]);
 CAGE_DEPTH = max([for (x=[0:1:MAX_INDEX])
@@ -258,56 +249,53 @@ CAGE_DEPTH = max([for (x=[0:1:MAX_INDEX])
 
 
 
-  module all_feet() {
-      // Add feet
-      translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
-      union() {
-        zu=RUBBER_FEET_DIAMETER_N+SHIELD_DEPTH+REAR_WALL;
-        zd=-RUBBER_FEET_DIAMETER_N-REAR_WALL+CAGE_DEPTH;
-        y=-RUBBER_FEET_DEPTH_N-spacer;
-        xr=RUBBER_FEET_DIAMETER_N+X_WALL;
-        xl=RUBBER_FEET_DIAMETER_N+X_WALL;
-        translate([xr,zd,y])
-        feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+spacer);
-        
-        translate([CAGE_WIDTH-xr,zd,y])
-        feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+spacer);
-        
-        translate([xl,zu,y])
-        feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+spacer);
-        
-        translate([CAGE_WIDTH+-xl,zu,y])
-        feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+spacer);
-      }
-      
+module all_feet() {
+  // Add feet
+  translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
+  union() {
+    x=RUBBER_FEET_DIAMETER_N+X_WALL;
+    y=-RUBBER_FEET_DEPTH_N-spacer;
+    zu=RUBBER_FEET_DIAMETER_N+REAR_WALL+SHIELD_DEPTH;
+    zd=-RUBBER_FEET_DIAMETER_N-REAR_WALL+CAGE_DEPTH;
+    translate([x,zd,y])
+    feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+spacer);
+    
+    translate([CAGE_WIDTH-x,zd,y])
+    feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+spacer);
+    
+    translate([x,zu,y])
+    feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+spacer);
+    
+    translate([CAGE_WIDTH+-x,zu,y])
+    feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+spacer);
   }
   
-  module feet(drive_height, drive_width, d_depth) {
-    translate([ 0,0,0])
-    cylinder(r=RUBBER_FEET_DIAMETER_N, h=RUBBER_FEET_DEPTH_N, center=false);  
-  }
-  
-  module chamber(kv) {
-  details = kv[1];
+}
+
+module feet(drive_height, drive_width, d_depth) {
+  translate([ 0,0,0])
+  cylinder(r=RUBBER_FEET_DIAMETER_N, h=RUBBER_FEET_DEPTH_N, center=false);  
+}
+
+module chamber(details) {
   drive_height = struct_val(details, "height_padded");
   drive_width = struct_val(details, "width_padded");
   drive_depth = struct_val(details, "depth");
   index = struct_val(details, "index");
   count = struct_val(details, "count");
-    lr_adjust = left_align && (drive_width*2+X_WALL*2 != CAGE_WIDTH)  ? CAGE_WIDTH-drive_width-X_WALL*2: 0;
-      for (curr_count=[1:1:count]) {
-        height_so_far = height_to_index(to_index=index, to_count=curr_count);
-        first=curr_count==1 && index==0;
-            translate([X_WALL, REAR_WALL, Y_WALL])
-        translate([lr_adjust, CAGE_DEPTH-drive_depth, height_so_far + (!first?0:FEET_VDIFF)])//MOVE CAGES UP/DOWN
-            color([1,0,0])
+  lr_adjust = left_align && (drive_width*2+X_WALL*2 != CAGE_WIDTH)  ? CAGE_WIDTH-drive_width-X_WALL*2: 0;
+  for (curr_count=[1:1:count]) {
+    height_so_far = height_to_index(to_index=index, to_count=curr_count);
+    first=curr_count==1 && index==0;
+    translate([X_WALL, REAR_WALL, Y_WALL])
+    translate([lr_adjust, CAGE_DEPTH-drive_depth, height_so_far + (!first?0:FEET_VDIFF)])//MOVE CAGES UP/DOWN
+    color([1,0,0])
     cube(size=[drive_width, drive_depth, drive_height], center=false);
-    }
   }
-  
-  
-  module ports(kv) {
-  details = kv[1];
+}
+
+
+module ports(details) {
   drive_width = struct_val(details, "width_padded");
   d_depth = struct_val(details, "depth");
   USB_type = struct_val(details, "type");
@@ -316,30 +304,30 @@ CAGE_DEPTH = max([for (x=[0:1:MAX_INDEX])
   count = struct_val(details, "count");
   conn_height = struct_val(details, "conn_height");
   conn_width = struct_val(details, "conn_width");
-         
-      for (curr_count=[1:1:count]) {
-          if (is_def(conn_height) && is_def(conn_width) && USB_type != "none") {
-//            difference() 
-            {
-              hull() {
-                conn_depth = CAGE_DEPTH-d_depth+REAR_WALL+spacer*2;
-                translate([X_WALL+hUSB + X_PAD, conn_depth-spacer,vUSB+Y_WALL])
-                port( conn_height,conn_width,conn_depth,vUSB,hUSB);      
-              }
-                  if (port_hole_can_intersect_side_walls) {
-              c_size=max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
-//              color([0.5,0.7,0])
-//              translate([(left_align ? -1: 1)*((left_align ? 0: CAGE_WIDTH)+c_size+(port_hole_can_intersect_side_walls?+spacer*3:X_WALL*2)+spacer), 
-//              -spacer*3,
-//              -vUSB-(conn_height>conn_width? conn_width :conn_height)
-//              ])
-//              mirror([(left_align ? 0: 1),0,0])
-//              cube(size=[(port_hole_can_intersect_side_walls?0:CAGE_WIDTH-drive_width+X_WALL)+c_size, d_depth+SHIELD_DEPTH+spacer*3, drive_height+(conn_height>conn_width? conn_width/2 :conn_height/2)*2], center=false);
-            }
-          }
+  
+  for (curr_count=[1:1:count]) {
+    if (is_def(conn_height) && is_def(conn_width) && USB_type != "none") {
+      //            difference() 
+      {
+        hull() {
+          conn_depth = CAGE_DEPTH-d_depth+REAR_WALL+spacer*2;
+          translate([X_WALL+hUSB + X_PAD, conn_depth-spacer,vUSB+Y_WALL])
+          port( conn_height,conn_width,conn_depth,vUSB,hUSB);      
+        }
+        if (port_hole_can_intersect_side_walls) {
+          c_size=max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
+          //              color([0.5,0.7,0])
+          //              translate([(left_align ? -1: 1)*((left_align ? 0: CAGE_WIDTH)+c_size+(port_hole_can_intersect_side_walls?+spacer*3:X_WALL*2)+spacer), 
+          //              -spacer*3,
+          //              -vUSB-(conn_height>conn_width? conn_width :conn_height)
+          //              ])
+          //              mirror([(left_align ? 0: 1),0,0])
+          //              cube(size=[(port_hole_can_intersect_side_walls?0:CAGE_WIDTH-drive_width+X_WALL)+c_size, d_depth+SHIELD_DEPTH+spacer*3, drive_height+(conn_height>conn_width? conn_width/2 :conn_height/2)*2], center=false);
         }
       }
+    }
   }
+}
 
 
 
@@ -352,46 +340,46 @@ module port(conn_height,conn_width,conn_depth,vUSB,hUSB) {
     cylinder(r=hole_radius, h=conn_depth, center=false);
     
     
-//    translate([(max(conn_height,conn_width))/2,0,0, ])  cylinder(r=hole_radius, h=conn_depth, center=false);
+    //    translate([(max(conn_height,conn_width))/2,0,0, ])  cylinder(r=hole_radius, h=conn_depth, center=false);
   }
 }
 
 
 module full_box(data_struct) {
-    
-//    difference() 
-    {
+  
+  //    difference() 
+  {
     difference() 
     {
-    color("pink")
-            // Hard Drive Slots
-              if (rounding_radius == 0) {
-                              cube(size=[CAGE_WIDTH, CAGE_DEPTH, CAGE_HEIGHT], center=false);
-              }
-              else {
-                roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH, CAGE_HEIGHT  ], center = false, radius = rounding_radius, apply_to = "all");
-              }
-              
-    union() {
-  for (details=data_struct) {
-    chamber(kv=details);
-  }
-      if (SHIELD_DEPTH > 0) {
-        translate([X_WALL, -0.1, -spacer])
-        color([1,0.5,0])
-        cube(size=[        CAGE_WIDTH-X_WALL*2,SHIELD_DEPTH,CAGE_HEIGHT-Y_WALL+spacer        ], center=false);
+      color("pink")
+      // Hard Drive Slots
+      if (rounding_radius == 0) {
+        cube(size=[CAGE_WIDTH, CAGE_DEPTH, CAGE_HEIGHT], center=false);
+      }
+      else {
+        roundedcube(size = [CAGE_WIDTH, CAGE_DEPTH, CAGE_HEIGHT  ], center = false, radius = rounding_radius, apply_to = "all");
       }
       
-       all_feet() ;
-  }
-  
- }
- 
-  for (details=data_struct) {
-    ports(kv=details);
+      union() {
+        for (details=[for (x=data_struct) x[1]]) {
+          chamber(details=details);
+        }
+        if (SHIELD_DEPTH > 0) {
+          translate([X_WALL, -0.1, -spacer])
+          color([1,0.5,0])
+          cube(size=[CAGE_WIDTH-X_WALL*2,SHIELD_DEPTH,CAGE_HEIGHT-Y_WALL+spacer], center=false);
+        }
+        
+        all_feet() ;
+      }
+      
+    }
+    
+    for (details=[for (x=data_struct) x[1]]) {
+      ports(details=details);
+    }
   }
 }
- }
 
 full_box(DATA_STRUCT);
 
