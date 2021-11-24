@@ -109,7 +109,7 @@ left_align=false;
 rubber_feet_diameter=5; //[0:0.1:15]
 rubber_feet_depth=0.4; //[0:0.1:6]
 // If your port alignment gets too close to an outer wall,  should it clip?
-port_hole_can_intersect_wall = true;
+port_hole_can_intersect_side_walls = true;
 
 
 /* [USB Tweaking] */
@@ -379,19 +379,19 @@ module cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height
       difference() 
       {
     hull() {
-      conn_depth = CAGE_DEPTH-d_depth+REAR_WALL+spacer*2;
-      translate([X_WALL+hUSB + X_PAD, conn_depth-spacer,vUSB+Y_WALL])
+      conn_depth = CAGE_DEPTH-d_depth+REAR_WALL+spacer*4;
+      translate([X_WALL+hUSB + X_PAD, conn_depth-spacer*2,vUSB+Y_WALL])
       port( conn_height,conn_width,conn_depth,vUSB,hUSB);      
     }
-//    if (port_hole_can_intersect_wall) {
+//    if (port_hole_can_intersect_side_walls) {
     c_size=max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
         color([0.5,0.7,0])
-    translate([(left_align ? -1: 1)*((left_align ? 0: CAGE_WIDTH)+c_size+(port_hole_can_intersect_wall?+spacer*6:X_WALL*2)+spacer), 
+    translate([(left_align ? -1: 1)*((left_align ? 0: CAGE_WIDTH)+c_size+(port_hole_can_intersect_side_walls?+spacer*6:X_WALL*2)+spacer), 
         -spacer*6,
         -vUSB-(conn_height>conn_width? conn_width :conn_height)
         ])
 mirror([(left_align ? 0: 1),0,0])
-    cube(size=[(port_hole_can_intersect_wall?0:CAGE_WIDTH-drive_width+X_WALL)+c_size, d_depth+SHIELD_DEPTH+spacer*6, drive_height+(conn_height>conn_width? conn_width/2 :conn_height/2)*2], center=false);
+    cube(size=[(port_hole_can_intersect_side_walls?0:CAGE_WIDTH-drive_width+X_WALL)+c_size, d_depth+SHIELD_DEPTH+spacer*6, drive_height+(conn_height>conn_width? conn_width/2 :conn_height/2)*2], center=false);
 //    }
   }
   }
