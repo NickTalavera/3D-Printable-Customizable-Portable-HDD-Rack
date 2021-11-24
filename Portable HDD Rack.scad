@@ -384,8 +384,8 @@ module cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height
     }
     if (!port_hole_can_intersect_wall) {
     c_size=max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
-    translate([CAGE_WIDTH+c_size+(port_hole_can_intersect_wall?-spacer*6:X_WALL*2)+spacer, -REAR_WALL, -vUSB])
-mirror([1,0,0])
+    translate([(left_align ? -1: 1)*((left_align ? 0: CAGE_WIDTH)+c_size+(port_hole_can_intersect_wall?-spacer*6:X_WALL*2)+spacer), -REAR_WALL, -vUSB])
+mirror([(left_align ? 0: 1),0,0])
     cube(size=[(port_hole_can_intersect_wall?0:CAGE_WIDTH-drive_width+X_WALL)+c_size, d_depth, drive_height+(conn_height>conn_width? conn_width/2 :conn_height/2)], center=false);
     }
   }
