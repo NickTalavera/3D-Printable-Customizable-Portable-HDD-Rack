@@ -296,18 +296,18 @@ cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height,USB_ty
 //  
 //  
 //      
-//    //      // Make rear shield
-//    if (SHIELD_DEPTH > 0) {
-//      translate([X_WALL, -0.1, -Y_WALL])
-//      color([1,0.5,0])
-//      cube(size=[
-//      CAGE_WIDTH-X_WALL*2,SHIELD_DEPTH,CAGE_HEIGHT
-//      ], center=false);
-//    }
-//    
-//    
-//    // Add feet
-//    
+    //      // Make rear shield
+    if (SHIELD_DEPTH > 0) {
+      translate([X_WALL, -0.1, -spacer])
+      color([1,0.5,0])
+      cube(size=[
+      CAGE_WIDTH-X_WALL*2,SHIELD_DEPTH,CAGE_HEIGHT-Y_WALL+spacer
+      ], center=false);
+    }
+    
+    
+    // Add feet
+    
 //    translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
 //    union() {
 //      zu=rubber_feet_diameter+SHIELD_DEPTH+REAR_WALL;
