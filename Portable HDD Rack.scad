@@ -279,7 +279,7 @@ module container(kv){
   is_first_device_type= index==0;
   
 //  difference()
-//  {
+  {
     
     
     //make cubby
@@ -308,27 +308,27 @@ cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height,USB_ty
     
     // Add feet
     
-//    translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
-//    union() {
-//      zu=rubber_feet_diameter+SHIELD_DEPTH+REAR_WALL;
-//      zd=CAGE_DEPTH-REAR_WALL+SHIELD_DEPTH-rubber_feet_diameter;
-//      y=-RUBBER_FEET_DEPTH_N-spacer;
-//      xr=rubber_feet_diameter+X_WALL;
-//      xl=rubber_feet_diameter+X_WALL;
-//      translate([xr,zd,y])
-//      feet(drive_height, drive_width, d_depth+spacer);
-//      
-//      translate([CAGE_WIDTH-xr,zd,y])
-//      feet(drive_height, drive_width, d_depth+spacer);
-//      
-//      translate([xl,zu,y])
-//      feet(drive_height, drive_width, d_depth+spacer);
-//      
-//      translate([CAGE_WIDTH+-xl,zu,y])
-//      feet(drive_height, drive_width, d_depth+spacer);
-//    }
-//    
-//  }
+    translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
+    union() {
+      zu=rubber_feet_diameter+SHIELD_DEPTH+REAR_WALL;
+      zd=-rubber_feet_diameter-REAR_WALL+CAGE_DEPTH;
+      y=-RUBBER_FEET_DEPTH_N-spacer;
+      xr=rubber_feet_diameter+X_WALL;
+      xl=rubber_feet_diameter+X_WALL;
+      translate([xr,zd,y])
+      feet(drive_height, drive_width, d_depth+spacer);
+      
+      translate([CAGE_WIDTH-xr,zd,y])
+      feet(drive_height, drive_width, d_depth+spacer);
+      
+      translate([xl,zu,y])
+      feet(drive_height, drive_width, d_depth+spacer);
+      
+      translate([CAGE_WIDTH+-xl,zu,y])
+      feet(drive_height, drive_width, d_depth+spacer);
+    }
+    
+  }
 //  
 }
 module feet(drive_height, drive_width, d_depth) {
