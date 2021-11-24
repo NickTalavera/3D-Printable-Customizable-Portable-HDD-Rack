@@ -22,7 +22,7 @@
             "rubber_feet_diameter": "5",
             "side_padding": "0.10000000000000001",
             "side_wall_thickness": "2.5",
-            "text_list": "80.3x15.7x110.6x3_Microx75x1x1,78.5x20.7x114.6x3_Microx75x1x3,75x9.2x107x3_Microx25x3x2",
+            "text_list": "80.3x15.7x110.6x3_Microx75x1x2,78.5x20.7x114.6x3_Microx75x1x3,75x9.2x107x3_Microx25x3x2",
             "top_bottom_wall_thickness": "2.5",
             "vertical_padding": "0.10000000000000001"
         }

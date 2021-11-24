@@ -229,8 +229,7 @@ x_at_index(index,"count"))
 
     ]],
 rb=flatten(r),
-rd=list_remove(rb,0),
-re=include ? rd: list_remove(rd,len(rd)-1),
+re=include ? rb: list_remove(rb,len(rb)-1),
 )
 re
 ;
@@ -278,76 +277,76 @@ module container(kv){
   full_depth = d_depth+REAR_WALL;
   is_first_device_type= index==0;
   
-  difference()
-  {
+//  difference()
+//  {
     
     
     //make cubby
-      union() {
+//      union() {
 //      union() {
 cage(count,index,full_height, d_depth,conn_height,conn_width,drive_height,USB_type, drive_width,vUSB,hUSB);
 //      translate([CAGE_WIDTH,0,0])
 //      cube([CAGE_WIDTH,CAGE_DEPTH,CAGE_HEIGHT]);
-  }
+//  }
       
       
       
-      
-  if (is_def(conn_height) && is_def(conn_width)) {
-    hull() {
-      conn_depth = CAGE_DEPTH-d_depth+SHIELD_DEPTH+REAR_WALL*2+spacer*2;
-      translate([X_WALL+hUSB + X_PAD, REAR_WALL*2,vUSB+Y_WALL])
-      port( conn_height,conn_width,conn_depth,vUSB,hUSB);
-      
-      
-//            if (vUSB< max(conn_height,conn_width)/2) {
-//              translate([X_WALL+hUSB + X_PAD,
-//              
-//              REAR_WALL*3,
-//              (conn_height>=conn_width ? conn_width/2:conn_height/2)+
-//              -Y_PAD+Y_WALL //+vUSB
-//              ])
-//              port(drive_height, drive_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
-//            }
-    }
-  }
-  
-  
-      
-    //      // Make rear shield
-    if (SHIELD_DEPTH > 0) {
-      translate([X_WALL, -0.1, -Y_WALL])
-      color([1,0.5,0])
-      cube(size=[
-      CAGE_WIDTH-X_WALL*2,SHIELD_DEPTH,CAGE_HEIGHT
-      ], center=false);
-    }
-    
-    
-    // Add feet
-    
-    translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
-    union() {
-      zu=rubber_feet_diameter+SHIELD_DEPTH+REAR_WALL;
-      zd=CAGE_DEPTH-REAR_WALL+SHIELD_DEPTH-rubber_feet_diameter;
-      y=-RUBBER_FEET_DEPTH_N-spacer;
-      xr=rubber_feet_diameter+X_WALL;
-      xl=rubber_feet_diameter+X_WALL;
-      translate([xr,zd,y])
-      feet(drive_height, drive_width, d_depth+spacer);
-      
-      translate([CAGE_WIDTH-xr,zd,y])
-      feet(drive_height, drive_width, d_depth+spacer);
-      
-      translate([xl,zu,y])
-      feet(drive_height, drive_width, d_depth+spacer);
-      
-      translate([CAGE_WIDTH+-xl,zu,y])
-      feet(drive_height, drive_width, d_depth+spacer);
-    }
-    
-  }
-  
+//      
+//  if (is_def(conn_height) && is_def(conn_width)) {
+//    hull() {
+//      conn_depth = CAGE_DEPTH-d_depth+SHIELD_DEPTH+REAR_WALL*2+spacer*2;
+//      translate([X_WALL+hUSB + X_PAD, REAR_WALL*2,vUSB+Y_WALL])
+//      port( conn_height,conn_width,conn_depth,vUSB,hUSB);
+//      
+//      
+////            if (vUSB< max(conn_height,conn_width)/2) {
+////              translate([X_WALL+hUSB + X_PAD,
+////              
+////              REAR_WALL*3,
+////              (conn_height>=conn_width ? conn_width/2:conn_height/2)+
+////              -Y_PAD+Y_WALL //+vUSB
+////              ])
+////              port(drive_height, drive_width, d_depth,conn_height,conn_width,conn_depth,vUSB,hUSB);
+////            }
+//    }
+//  }
+//  
+//  
+//      
+//    //      // Make rear shield
+//    if (SHIELD_DEPTH > 0) {
+//      translate([X_WALL, -0.1, -Y_WALL])
+//      color([1,0.5,0])
+//      cube(size=[
+//      CAGE_WIDTH-X_WALL*2,SHIELD_DEPTH,CAGE_HEIGHT
+//      ], center=false);
+//    }
+//    
+//    
+//    // Add feet
+//    
+//    translate([0,0,RUBBER_FEET_DEPTH_N-spacer])
+//    union() {
+//      zu=rubber_feet_diameter+SHIELD_DEPTH+REAR_WALL;
+//      zd=CAGE_DEPTH-REAR_WALL+SHIELD_DEPTH-rubber_feet_diameter;
+//      y=-RUBBER_FEET_DEPTH_N-spacer;
+//      xr=rubber_feet_diameter+X_WALL;
+//      xl=rubber_feet_diameter+X_WALL;
+//      translate([xr,zd,y])
+//      feet(drive_height, drive_width, d_depth+spacer);
+//      
+//      translate([CAGE_WIDTH-xr,zd,y])
+//      feet(drive_height, drive_width, d_depth+spacer);
+//      
+//      translate([xl,zu,y])
+//      feet(drive_height, drive_width, d_depth+spacer);
+//      
+//      translate([CAGE_WIDTH+-xl,zu,y])
+//      feet(drive_height, drive_width, d_depth+spacer);
+//    }
+//    
+//  }
+//  
 }
 module feet(drive_height, drive_width, d_depth) {
   
