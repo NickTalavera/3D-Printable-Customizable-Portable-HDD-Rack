@@ -1,9 +1,15 @@
+//---------------------------------
+// Quality
 $fn = 20;
 // Set to 0.01 for higher definition curves (renders slower)
 $fs = 0.5;
-//------------
+//---------------------------------
+// Includes
 include <BOSL2/std.scad>;
+
+//---------------------------------
 // Start HDDock Specific Section
+//---------------------------------
 function rand_int(mins=0,maxs=100)=round(rands(mins,maxs,1)[0]);
 
 function input_to_struct(details, index) =
@@ -64,7 +70,55 @@ assert(tester): show_if_pass || show_if_pass ? echo(textin): undef
 )
 : undef;
 
+
+
+
+function index_height(index,count)=
+let(
+test1=assert(count<=x_at_index(index,"count")),
+d_height=x_at_index(index,"height_padded"),
+is_first=index==0 && count==1,
+max_index=MAX_INDEX,
+is_max_index = MAX_INDEX==index,
+is_last=is_max_index && count == COUNT_AT_MAX_INDEX,
+last_add = is_last ? Y_WALL : 0,
+first_add = is_first ? FEET_VDIFF : 0
+)
+d_height
++ last_add
++ Y_WALL
++ first_add
+;
+
+function height_to_index2(to_index,to_count,include=false) = 
+let (
+index_goal=min(to_index,MAX_INDEX),
+to_count_N=to_count,
+past_first=to_index>=0 && to_count_N>=1,
+f_sub=past_first ? index_height(0,1): 0,
+r=[for (index=[0:1:index_goal]) [for (count=[
+1:1: 
+(
+to_index == index ? to_count_N :
+x_at_index(index,"count"))
+])
+index_height(index,count) 
+
+]],
+rb=flatten(r),
+re=include ? rb: list_remove(rb,len(rb)-1),
+)
+re
+;
+
+
+function height_to_index(to_index,to_count,include=false) = sum(
+flatten(height_to_index2(to_index,to_count,include=include)
+));
+
+//---------------------------------
 // Global variables
+//---------------------------------
 
 /* [Input] */
 // Coordinates are measured from bottom left corner
@@ -111,11 +165,10 @@ rubber_feet_diameter=5; //[0:0.1:15]
 rubber_feet_depth=0.4; //[0:0.1:6]
 // If your port alignment gets too close to an outer wall,  should it clip?
 port_hole_can_intersect_side_walls = true;
-CAN_INTERSECT = port_hole_can_intersect_side_walls;
 
 
 /* [USB Tweaking] */
-//mm
+// All measured in mm. I suggest including the plastic of the connector.
 USB_C_Height = 6.2;
 //mm
 USB_C_Width = 10.1;
@@ -131,31 +184,39 @@ USB_Micro_Width = 10.6;
 USB_Mini_Height = 6;
 //mm
 USB_Mini_Width = 10;
+//Depth of the metal portion of the USB to remove further plastic to accomodate
+usb_connector_depth=3;
 
 
 
 /* [Debugging] */
+// Prints more details to the log.  Checks against max height.
 ENABLE_DEBUGGING=false;
-
-
 // Height limit in mm
 MAX_BOX_HEIGHT = 88;
 
 
 /* [Hidden] */
-color_start=0.5;
-SPACER=0.02;
+//---------------------------------
+//Constrain input variables
+//---------------------------------
+USB_CONNECTOR_DEPTH=usb_connector_depth;
+CAN_INTERSECT = port_hole_can_intersect_side_walls;
 RUBBER_FEET_DEPTH_N=rubber_feet_depth;
 RUBBER_FEET_DIAMETER_N=rubber_feet_diameter;
+Y_PAD = vertical_padding;
+X_PAD = side_padding;
 REAR_WALL=min(max(rear_wall_thickness,0.3),250);
 Y_WALL=min(max(top_bottom_wall_thickness,0.3),250);
 X_WALL=min(max(side_wall_thickness,0.3),250);
 SHIELD_DEPTH=min(max(rear_shield,0),250);
-Y_PAD = vertical_padding;
-X_PAD = side_padding;
-USB_CONNECTOR_DEPTH=0.5;
-
-
+//---------------------------------
+//Hidden constants
+//---------------------------------
+SPACER=0.02;
+//---------------------------------
+//Calculated and hidden variables
+//---------------------------------
 USB_STRUCT = [
 ["c",[
 ["conn_height",USB_C_Height],
@@ -177,7 +238,6 @@ USB_STRUCT = [
 ],
 ]
 ];
-
 DATA_STRUCT=parse_input(text_list);
 MAX_INDEX=len(DATA_STRUCT)-1;
 COUNT_AT_MAX_INDEX=x_at_index(MAX_INDEX,"count");
@@ -198,49 +258,6 @@ if (ENABLE_DEBUGGING) {
 }
 
 
-function index_height(index,count)=
-let(
-test1=assert(count<=x_at_index(index,"count")),
-d_height=x_at_index(index,"height_padded"),
-is_first=index==0 && count==1,
-max_index=MAX_INDEX,
-is_max_index = MAX_INDEX==index,
-is_last=is_max_index && count == COUNT_AT_MAX_INDEX,
-last_add = is_last ? Y_WALL : 0,
-first_add = is_first ? FEET_VDIFF : 0
-)
-d_height
-+ last_add
-+ Y_WALL
-+ first_add
-;
-
-function height_to_index2(to_index,to_count,include=false) = 
-let (
-index_goal=min(to_index,MAX_INDEX),
-to_count_N=to_count,
-past_first=to_index>=0 && to_count_N>=1,
-f_sub=past_first ? index_height(0,1): 0,
-r=[for (index=[0:1:index_goal]) [for (count=[
-1:1: 
-(
-to_index == index ? to_count_N :
-x_at_index(index,"count"))
-])
-index_height(index,count) 
-
-]],
-rb=flatten(r),
-re=include ? rb: list_remove(rb,len(rb)-1),
-)
-re
-;
-
-
-function height_to_index(to_index,to_count,include=false) = sum(
-flatten(height_to_index2(to_index,to_count,include=include)
-));
-
 FEET_VDIFF = max(RUBBER_FEET_DEPTH_N-Y_WALL,0);
 TOTAL_COUNT = sum([for (x=[0:1:MAX_INDEX]) struct_val(DATA_STRUCT[x][1],"count")]);
 D_SPACED = SPACER*2;
@@ -256,7 +273,8 @@ CAGE_DEPTH_SPACED = CAGE_DEPTH + D_SPACED;
 
 
 module all_feet() {
-  // Add feet
+  // Add 4 feet
+        if (RUBBER_FEET_DEPTH_N > 0 && RUBBER_FEET_DIAMETER_N > 0) {
   translate([0,0,RUBBER_FEET_DEPTH_N-SPACER])
   union() {
     x=RUBBER_FEET_DIAMETER_N+X_WALL;
@@ -275,10 +293,11 @@ module all_feet() {
     translate([CAGE_WIDTH+-x,zu,y])
     feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
   }
+  }
 }
 
 module feet(drive_height, drive_width, d_depth) {
-        if (RUBBER_FEET_DEPTH_N > 0 || RUBBER_FEET_DIAMETER_N > 0) {
+        if (RUBBER_FEET_DEPTH_N > 0 && RUBBER_FEET_DIAMETER_N > 0) {
   cylinder(r=RUBBER_FEET_DIAMETER_N, h=RUBBER_FEET_DEPTH_N, center=false);  
         }
 }
@@ -312,7 +331,7 @@ module ports(details) {
   conn_width = struct_val(details, "conn_width");
   index = struct_val(details, "index");
   intersect_shield = (!CAN_INTERSECT ? SHIELD_DEPTH: 0);
-  conn_depth = CAGE_DEPTH-drive_depth+REAR_WALL+D_SPACED*3.5-intersect_shield;
+  conn_depth = CAGE_DEPTH-drive_depth+REAR_WALL+D_SPACED*3.5-intersect_shield+min(USB_CONNECTOR_DEPTH,drive_depth-D_SPACED);
   c_size = max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
   
   for (curr_count=[1:1:count]) {
@@ -381,7 +400,7 @@ module port(conn_height,conn_width,conn_depth,vUSB,hUSB) {
     echo("conn_height",conn_height);
     echo("conn_width",conn_width);
     echo();
-  rotate([90,0,0])
+    xrot(90)
 //  hull()
   {
 //    translate([
@@ -400,7 +419,6 @@ module port(conn_height,conn_width,conn_depth,vUSB,hUSB) {
 
 
 module full_box(data_struct) {
-  
   //    difference() 
   {
     difference() 
@@ -719,3 +737,17 @@ module roundedcube(size = [1, 1, 1], center = false, radius = 0.5, apply_to = "a
     }
   }
 }
+
+module xrot(a=0, p, cp)
+{
+    assert(is_undef(p), "Module form `xrot()` does not accept p= argument.");
+    if (a==0) {
+        children();  // May be slightly faster?
+    } else if (!is_undef(cp)) {
+        translate(cp) rotate([a, 0, 0]) translate(-cp) children();
+    } else {
+        rotate([a, 0, 0]) children();
+    }
+}
+
+function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
