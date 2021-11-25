@@ -25,9 +25,9 @@ conn_width=struct_val(usb_details,"conn_width"),
 drive_height=details[1],
 drive_height_padded=max(drive_height,is_def(conn_height) ? conn_height: 0)+Y_PAD*2,
 drive_width_padded=max(details[0],(is_def(conn_width) ? conn_width: 0))+X_PAD*2,
-zUSB=max(min(details[5],drive_height_padded),-Y_WALL),
-xUSB=max(min(details[4],drive_width_padded-(is_def(conn_width) ? conn_width: 0)),-X_WALL),
-d_depth=details [2],
+zUSB=details[5],
+xUSB=details[4]+X_PAD,
+d_depth=details[2],
 new_struct=struct_set(struct,
 ["width_padded",drive_width_padded,
 "width_unpadded",details[0],
@@ -123,7 +123,7 @@ flatten(height_to_index2(to_index,to_count,include=include)
 /* [Input] */
 // Coordinates are measured from bottom left corner
 // mm units
-// <W>x<H>x<D>x<C|Micro|3_Micro|Mini|None>x<X USB Coords>x<Y USB Coords>x<COUNT>
+// <W (mm)>x<H (mm)>x<D (mm)>x<C|Micro|3_Micro|Mini|None>x<X USB Coords (mm)>x<Y USB Coords (mm)>x<COUNT>
 text_list="
 80.3x15.7x110.6x3_Microx75x1x1,
 78.5x20.7x114.6x3_Microx75x1x1,
@@ -341,8 +341,8 @@ module ports(details) {
   
     
   //Make the ports
-  translate([0,conn_y_pos,0])
-  translate([conn_x_pos,0,0])
+  translate([0,conn_y_pos])
+  translate([conn_x_pos,0])
   translate([0,0,conn_z_pos])
   for (curr_count=[1:1:count]) {
     if (is_def(conn_height) && is_def(conn_width) && USB_type != "none") {
@@ -374,11 +374,12 @@ module port_crop(details) {
   conn_w = max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
   conn_h = (conn_height>conn_width? conn_width :conn_height);
   h_gt_w = drive_height+conn_h;
+    lr_mirror = [(LEFT_ALIGN ? 0: 1),0];
   
   if (is_def(conn_height) && is_def(conn_width) && USB_type != "none" && !CAN_INTERSECT) {
     // Non indented port crop
-    mirror([(LEFT_ALIGN ? 0: 1),0])
-    translate([(LEFT_ALIGN ? CAGE_WIDTH: 0)-SPACER-X_WALL,  -D_SPACED,0])
+    mirror(lr_mirror)
+    translate([(LEFT_ALIGN ? CAGE_WIDTH: 0)-SPACER-X_WALL,  -D_SPACED])
     cube(size=[CAGE_WIDTH_SPACED, CAGE_DEPTH_SPACED, CAGE_HEIGHT_SPACED], center=false);
     // Bottom port crop
     mirror([0,0,1])
@@ -395,7 +396,7 @@ module port_crop(details) {
       -SPACER*3,
       0
       ])
-      mirror([(LEFT_ALIGN ? 0: 1),0,0])
+      mirror(lr_mirror)
       cube(size=[(CAN_INTERSECT?0:CAGE_WIDTH-drive_width+X_WALL)+conn_w, 
       CAGE_DEPTH+SPACER*10, 
       h_gt_w + (last ? Y_WALL+SPACER : 0)
@@ -417,13 +418,9 @@ module port(conn_height,conn_width,conn_depth,zUSB,xUSB) {
     //    translate([
     //      conn_height<=conn_width ? conn_height/2-hole_radius:0,
     //      conn_height>conn_width ? conn_height/2-hole_radius:0
-    //      ])
+    //      ]) 
     //    cylinder(r=hole_radius, h=conn_depth, center=false);
     //    
-    
-    //        translate([(min(conn_height,conn_width))/2,
-    //      0
-    //      ])  
     cylinder(r=hole_radius, h=conn_depth, center=false);
   }
 }
