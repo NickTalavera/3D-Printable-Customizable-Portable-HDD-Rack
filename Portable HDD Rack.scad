@@ -25,8 +25,8 @@ conn_width=struct_val(usb_details,"conn_width"),
 drive_height=details[1],
 drive_height_padded=max(drive_height,is_def(conn_height) ? conn_height: 0)+Y_PAD*2,
 drive_width_padded=max(details[0],(is_def(conn_width) ? conn_width: 0))+X_PAD*2,
-vUSB=max(min(details[5],drive_height_padded),-Y_WALL),
-hUSB=max(min(details[4],drive_width_padded-(is_def(conn_width) ? conn_width: 0)),-X_WALL),
+zUSB=max(min(details[5],drive_height_padded),-Y_WALL),
+xUSB=max(min(details[4],drive_width_padded-(is_def(conn_width) ? conn_width: 0)),-X_WALL),
 d_depth=details [2],
 new_struct=struct_set(struct,
 ["width_padded",drive_width_padded,
@@ -37,8 +37,8 @@ new_struct=struct_set(struct,
 "conn_width",conn_width,
 "height_padded",drive_height_padded,
 "height_unpadded",drive_height,
-"vUSB",vUSB,
-"hUSB",hUSB,
+"zUSB",zUSB,
+"xUSB",xUSB,
 "count",details[6],
 "index",index,
 "device_name",device_name,
@@ -324,19 +324,18 @@ module ports(details) {
   drive_depth = struct_val(details, "depth");
   drive_width = struct_val(details, "width_padded");
   USB_type = struct_val(details, "type");
-  vUSB = struct_val(details, "vUSB");
-  hUSB = struct_val(details, "hUSB");
+  zUSB = struct_val(details, "zUSB");
+  xUSB = struct_val(details, "xUSB");
   count = struct_val(details, "count");
   conn_height = struct_val(details, "conn_height");
   conn_width = struct_val(details, "conn_width");
   index = struct_val(details, "index");
-  intersect_shield = (!CAN_INTERSECT ? SHIELD_DEPTH: 0);
-  
+    
   //Calculate port placement and size details
-  conn_depth = CAGE_DEPTH-drive_depth+REAR_WALL+D_SPACED*3.5-intersect_shield+min(USB_CONNECTOR_DEPTH,drive_depth-D_SPACED);
-  conn_x_pos =  hUSB + (LEFT_ALIGN ? CAGE_WIDTH-drive_width-X_WALL : X_WALL);
-  conn_y_pos = intersect_shield-D_SPACED*3 + conn_depth;
-  conn_z_pos = vUSB + Y_WALL ;
+  conn_depth = CAGE_DEPTH-drive_depth+REAR_WALL+D_SPACED*3.5-(!CAN_INTERSECT ? SHIELD_DEPTH: 0)+min(USB_CONNECTOR_DEPTH,drive_depth-D_SPACED);
+  conn_x_pos = xUSB + (LEFT_ALIGN ? CAGE_WIDTH-drive_width : 0);
+  conn_y_pos = conn_depth-D_SPACED*3;
+  conn_z_pos = zUSB ;
   conn_w = max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
   conn_h = (conn_height>conn_width? conn_width :conn_height);
   
@@ -353,7 +352,7 @@ module ports(details) {
         first=curr_count==1 && index==0;
         last=curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
         translate([0, 0, height_so_far + (!first?0:FEET_VDIFF)]) // X_PAD Fix?
-        port( conn_height,conn_width,conn_depth,vUSB,hUSB);      
+        port( conn_height,conn_width,conn_depth,zUSB,xUSB);      
       }
     }
   }
@@ -366,8 +365,8 @@ module port_crop(details) {
   drive_height = struct_val(details, "height_padded");
   drive_depth = struct_val(details, "depth");
   USB_type = struct_val(details, "type");
-  vUSB = struct_val(details, "vUSB");
-  hUSB = struct_val(details, "hUSB");
+  zUSB = struct_val(details, "zUSB");
+  xUSB = struct_val(details, "xUSB");
   count = struct_val(details, "count");
   conn_height = struct_val(details, "conn_height");
   conn_width = struct_val(details, "conn_width");
@@ -406,7 +405,7 @@ module port_crop(details) {
 }
 
 
-module port(conn_height,conn_width,conn_depth,vUSB,hUSB) {
+module port(conn_height,conn_width,conn_depth,zUSB,xUSB) {
   hole_radius = min(conn_height,conn_width)/2;
   echo("hole_radius",hole_radius);
   echo("conn_height",conn_height);
@@ -457,9 +456,16 @@ module full_box(data_struct) {
         all_feet() ;
       }
     }
-    difference() 
+    difference()
     {
       for (details=[for (x=data_struct) x[1]]) {
+  conn_x_pos =  (LEFT_ALIGN ? -X_WALL : X_WALL);
+  conn_y_pos = (!CAN_INTERSECT ? SHIELD_DEPTH: 0)-D_SPACED*3;
+  conn_z_pos = Y_WALL;   
+  //Make the ports
+  translate([conn_y_pos,conn_x_pos,conn_z_pos])
+          
+          
         ports(details=details);
       }
       for (details=[for (x=data_struct) x[1]]) {

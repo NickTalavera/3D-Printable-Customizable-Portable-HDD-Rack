@@ -44,7 +44,7 @@
             "rounding_radius": "0",
             "rubber_feet_depth": "1.4000000000000001",
             "rubber_feet_diameter": "1.1000000000000001",
-            "side_padding": "4.9000000000000004",
+            "side_padding": "0",
             "side_wall_thickness": "8.9000000000000004",
             "text_list": "80.3x15.7x110.6x3_Microx0x0x1,78.5x20.7x114.6xCx75x1x1,75x9.2x107x3_Microx0x0x1",
             "top_bottom_wall_thickness": "10.000000000000002",
