@@ -274,32 +274,32 @@ CAGE_DEPTH_SPACED = CAGE_DEPTH + D_SPACED;
 
 module all_feet() {
   // Add 4 feet
-        if (RUBBER_FEET_DEPTH_N > 0 && RUBBER_FEET_DIAMETER_N > 0) {
-  translate([0,0,RUBBER_FEET_DEPTH_N-SPACER])
-  union() {
-    x=RUBBER_FEET_DIAMETER_N+X_WALL;
-    y=-RUBBER_FEET_DEPTH_N-SPACER;
-    zu=RUBBER_FEET_DIAMETER_N+REAR_WALL+SHIELD_DEPTH;
-    zd=-RUBBER_FEET_DIAMETER_N-REAR_WALL+CAGE_DEPTH;
-    translate([x,zd,y])
-    feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
-    
-    translate([CAGE_WIDTH-x,zd,y])
-    feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
-    
-    translate([x,zu,y])
-    feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
-    
-    translate([CAGE_WIDTH+-x,zu,y])
-    feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
-  }
+  if (RUBBER_FEET_DEPTH_N > 0 && RUBBER_FEET_DIAMETER_N > 0) {
+    translate([0,0,RUBBER_FEET_DEPTH_N-SPACER])
+    union() {
+      x=RUBBER_FEET_DIAMETER_N+X_WALL;
+      y=-RUBBER_FEET_DEPTH_N-SPACER;
+      zu=RUBBER_FEET_DIAMETER_N+REAR_WALL+SHIELD_DEPTH;
+      zd=-RUBBER_FEET_DIAMETER_N-REAR_WALL+CAGE_DEPTH;
+      translate([x,zd,y])
+      feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
+      
+      translate([CAGE_WIDTH-x,zd,y])
+      feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
+      
+      translate([x,zu,y])
+      feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
+      
+      translate([CAGE_WIDTH+-x,zu,y])
+      feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
+    }
   }
 }
 
 module feet(drive_height, drive_width, d_depth) {
-        if (RUBBER_FEET_DEPTH_N > 0 && RUBBER_FEET_DIAMETER_N > 0) {
-  cylinder(r=RUBBER_FEET_DIAMETER_N, h=RUBBER_FEET_DEPTH_N, center=false);  
-        }
+  if (RUBBER_FEET_DEPTH_N > 0 && RUBBER_FEET_DIAMETER_N > 0) {
+    cylinder(r=RUBBER_FEET_DIAMETER_N, h=RUBBER_FEET_DEPTH_N, center=false);  
+  }
 }
 
 module chamber(details) {
@@ -331,18 +331,29 @@ module ports(details) {
   conn_width = struct_val(details, "conn_width");
   index = struct_val(details, "index");
   intersect_shield = (!CAN_INTERSECT ? SHIELD_DEPTH: 0);
-  conn_depth = CAGE_DEPTH-drive_depth+REAR_WALL+D_SPACED*3.5-intersect_shield+min(USB_CONNECTOR_DEPTH,drive_depth-D_SPACED);
-  c_size = max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
   
+  //Calculate port placement and size details
+  conn_depth = CAGE_DEPTH-drive_depth+REAR_WALL+D_SPACED*3.5-intersect_shield+min(USB_CONNECTOR_DEPTH,drive_depth-D_SPACED);
+  conn_x_pos =  hUSB + (LEFT_ALIGN ? CAGE_WIDTH-drive_width-X_WALL : X_WALL);
+  conn_y_pos = intersect_shield-D_SPACED*3 + conn_depth;
+  conn_z_pos = vUSB + Y_WALL ;
+  conn_w = max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
+  conn_h = (conn_height>conn_width? conn_width :conn_height);
+  
+    
+  //Make the ports
+  translate([0,conn_y_pos,0])
+  translate([conn_x_pos,0,0])
+  translate([0,0,conn_z_pos])
   for (curr_count=[1:1:count]) {
     if (is_def(conn_height) && is_def(conn_width) && USB_type != "none") {
       //        hull() 
-        {
-      height_so_far = height_to_index(to_index=index, to_count=curr_count);
-      first=curr_count==1 && index==0;
-      last=curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
-      translate([hUSB  + (LEFT_ALIGN ? CAGE_WIDTH-drive_width-X_WALL : X_WALL + X_PAD), intersect_shield-D_SPACED*3 + conn_depth, height_so_far + vUSB + Y_WALL + (!first?0:FEET_VDIFF)]) // X_PAD Fix?
-          port( conn_height,conn_width,conn_depth,vUSB,hUSB);      
+      {
+        height_so_far = height_to_index(to_index=index, to_count=curr_count);
+        first=curr_count==1 && index==0;
+        last=curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
+        translate([0, 0, height_so_far + (!first?0:FEET_VDIFF)]) // X_PAD Fix?
+        port( conn_height,conn_width,conn_depth,vUSB,hUSB);      
       }
     }
   }
@@ -361,34 +372,35 @@ module port_crop(details) {
   conn_height = struct_val(details, "conn_height");
   conn_width = struct_val(details, "conn_width");
   index = struct_val(details, "index");
-  c_size = max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
-    h_gt_w = drive_height+(conn_height>conn_width? conn_width :conn_height);
-    
-    if (is_def(conn_height) && is_def(conn_width) && USB_type != "none" && !CAN_INTERSECT) {
-              // Non indented port crop
-              mirror([(LEFT_ALIGN ? 0: 1),0])
-              translate([(LEFT_ALIGN ? CAGE_WIDTH: 0)-SPACER-X_WALL,  -D_SPACED,0])
-              cube(size=[CAGE_WIDTH_SPACED, CAGE_DEPTH_SPACED, CAGE_HEIGHT_SPACED], center=false);
-              // Bottom port crop
-              mirror([0,0,1])
-              translate([-SPACER,0,-Y_WALL-D_SPACED])
-              cube(size=[CAGE_WIDTH_SPACED, CAGE_DEPTH_SPACED, h_gt_w], center=false);
-  for (curr_count=[1:1:count]) {
+  conn_w = max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
+  conn_h = (conn_height>conn_width? conn_width :conn_height);
+  h_gt_w = drive_height+conn_h;
+  
+  if (is_def(conn_height) && is_def(conn_width) && USB_type != "none" && !CAN_INTERSECT) {
+    // Non indented port crop
+    mirror([(LEFT_ALIGN ? 0: 1),0])
+    translate([(LEFT_ALIGN ? CAGE_WIDTH: 0)-SPACER-X_WALL,  -D_SPACED,0])
+    cube(size=[CAGE_WIDTH_SPACED, CAGE_DEPTH_SPACED, CAGE_HEIGHT_SPACED], center=false);
+    // Bottom port crop
+    mirror([0,0,1])
+    translate([-SPACER,0,-Y_WALL-D_SPACED])
+    cube(size=[CAGE_WIDTH_SPACED, CAGE_DEPTH_SPACED, h_gt_w], center=false);
+    for (curr_count=[1:1:count]) {
       height_so_far = height_to_index(to_index=index, to_count=curr_count);
       first = curr_count==1 && index==0;
       last = curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
       translate([0, 0, height_so_far + (!first?0:FEET_VDIFF)])
-              //Indented port crop
-            translate([
-              (LEFT_ALIGN ? -1: 1)*((LEFT_ALIGN ? 0: CAGE_WIDTH)+c_size+(CAN_INTERSECT?+SPACER*3:X_WALL*2)+SPACER), 
-            -SPACER*3,
-            0
-            ])
-            mirror([(LEFT_ALIGN ? 0: 1),0,0])
-            cube(size=[(CAN_INTERSECT?0:CAGE_WIDTH-drive_width+X_WALL)+c_size, 
-              CAGE_DEPTH+SPACER*10, 
-              h_gt_w + (last ? Y_WALL+SPACER : 0)
-            ], center=false);
+      //Indented port crop
+      translate([
+      (LEFT_ALIGN ? -1: 1)*((LEFT_ALIGN ? 0: CAGE_WIDTH)+conn_w+(CAN_INTERSECT?+SPACER*3:X_WALL*2)+SPACER), 
+      -SPACER*3,
+      0
+      ])
+      mirror([(LEFT_ALIGN ? 0: 1),0,0])
+      cube(size=[(CAN_INTERSECT?0:CAGE_WIDTH-drive_width+X_WALL)+conn_w, 
+      CAGE_DEPTH+SPACER*10, 
+      h_gt_w + (last ? Y_WALL+SPACER : 0)
+      ], center=false);
     }
   }
 }
@@ -396,24 +408,24 @@ module port_crop(details) {
 
 module port(conn_height,conn_width,conn_depth,vUSB,hUSB) {
   hole_radius = min(conn_height,conn_width)/2;
-    echo("hole_radius",hole_radius);
-    echo("conn_height",conn_height);
-    echo("conn_width",conn_width);
-    echo();
-    xrot(90)
-//  hull()
+  echo("hole_radius",hole_radius);
+  echo("conn_height",conn_height);
+  echo("conn_width",conn_width);
+  echo();
+  xrot(90)
+  //  hull()
   {
-//    translate([
-//      conn_height<=conn_width ? conn_height/2-hole_radius:0,
-//      conn_height>conn_width ? conn_height/2-hole_radius:0
-//      ])
-//    cylinder(r=hole_radius, h=conn_depth, center=false);
-//    
+    //    translate([
+    //      conn_height<=conn_width ? conn_height/2-hole_radius:0,
+    //      conn_height>conn_width ? conn_height/2-hole_radius:0
+    //      ])
+    //    cylinder(r=hole_radius, h=conn_depth, center=false);
+    //    
     
-//        translate([(min(conn_height,conn_width))/2,
-//      0
-//      ])  
-      cylinder(r=hole_radius, h=conn_depth, center=false);
+    //        translate([(min(conn_height,conn_width))/2,
+    //      0
+    //      ])  
+    cylinder(r=hole_radius, h=conn_depth, center=false);
   }
 }
 
@@ -444,16 +456,16 @@ module full_box(data_struct) {
         
         all_feet() ;
       }
-  }
+    }
     difference() 
-      {
-    for (details=[for (x=data_struct) x[1]]) {
-      ports(details=details);
+    {
+      for (details=[for (x=data_struct) x[1]]) {
+        ports(details=details);
+      }
+      for (details=[for (x=data_struct) x[1]]) {
+        port_crop(details=details);
+      }
     }
-    for (details=[for (x=data_struct) x[1]]) {
-      port_crop(details=details);
-    }
-}
     
     
   }
@@ -740,14 +752,14 @@ module roundedcube(size = [1, 1, 1], center = false, radius = 0.5, apply_to = "a
 
 module xrot(a=0, p, cp)
 {
-    assert(is_undef(p), "Module form `xrot()` does not accept p= argument.");
-    if (a==0) {
-        children();  // May be slightly faster?
-    } else if (!is_undef(cp)) {
-        translate(cp) rotate([a, 0, 0]) translate(-cp) children();
-    } else {
-        rotate([a, 0, 0]) children();
-    }
+  assert(is_undef(p), "Module form `xrot()` does not accept p= argument.");
+  if (a==0) {
+    children();  // May be slightly faster?
+  } else if (!is_undef(cp)) {
+    translate(cp) rotate([a, 0, 0]) translate(-cp) children();
+  } else {
+    rotate([a, 0, 0]) children();
+  }
 }
 
 function xrot(a=0, p=_NO_ARG, cp) = rot([a,0,0], cp=cp, p=p);
