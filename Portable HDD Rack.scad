@@ -90,14 +90,14 @@ text_list="
 
 
 //mm
-side_wall_thickness=2.5; //[0.3:0.1:6]
+side_wall_thickness=2.5; //[0.3:0.1:10]
 //mm
-top_bottom_wall_thickness=2.5; //[0.3:0.1:6]
+top_bottom_wall_thickness=2.5; //[0.3:0.1:10]
 //mm
-rear_wall_thickness=2.5; //[0.3:0.1:6]
-//mm on each side (multiplies by 2)
+rear_wall_thickness=2.5; //[0.3:0.1:10]
+//mm per each side
 vertical_padding=1.5; //[0.1:0.1:16]
-//mm on each side (multiplies by 2)
+//mm per each side
 side_padding=0.1; //[0:0.1:6]
 //Depth of a rear shield in mm
 rear_shield=0; //[0:1:60]
@@ -297,32 +297,73 @@ module chamber(details) {
 
 module ports(details) {
   drive_width = struct_val(details, "width_padded");
-  d_depth = struct_val(details, "depth");
+  drive_height = struct_val(details, "height_padded");
+  drive_depth = struct_val(details, "depth");
   USB_type = struct_val(details, "type");
   vUSB = struct_val(details, "vUSB");
   hUSB = struct_val(details, "hUSB");
   count = struct_val(details, "count");
   conn_height = struct_val(details, "conn_height");
   conn_width = struct_val(details, "conn_width");
+  index = struct_val(details, "index");
   
   for (curr_count=[1:1:count]) {
     if (is_def(conn_height) && is_def(conn_width) && USB_type != "none") {
-      //            difference() 
+      height_so_far = height_to_index(to_index=index, to_count=curr_count);
+      first=curr_count==1 && index==0;
+      last=curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
+      
+      
+      //    translate([X_WALL, REAR_WALL, Y_WALL])
+      //    translate([0, CAGE_DEPTH-drive_depth, height_so_far + (!first?0:FEET_VDIFF)])//MOVE CAGES UP/DOWN
+      //    translate([X_WALL, REAR_WALL, Y_WALL])
+      translate([0, 0, height_so_far + (!first?0:FEET_VDIFF)])//MOVE CAGES UP/DOWN
+      
+      
+              difference()
       {
+        //Add port holes
         hull() {
-          conn_depth = CAGE_DEPTH-d_depth+REAR_WALL+spacer*2;
+          conn_depth = CAGE_DEPTH-drive_depth+REAR_WALL+spacer*2;
           translate([X_WALL+hUSB + X_PAD, conn_depth-spacer,vUSB+Y_WALL])
           port( conn_height,conn_width,conn_depth,vUSB,hUSB);      
         }
-        if (port_hole_can_intersect_side_walls) {
-          c_size=max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
-          //              color([0.5,0.7,0])
-          //              translate([(left_align ? -1: 1)*((left_align ? 0: CAGE_WIDTH)+c_size+(port_hole_can_intersect_side_walls?+spacer*3:X_WALL*2)+spacer), 
-          //              -spacer*3,
-          //              -vUSB-(conn_height>conn_width? conn_width :conn_height)
-          //              ])
-          //              mirror([(left_align ? 0: 1),0,0])
-          //              cube(size=[(port_hole_can_intersect_side_walls?0:CAGE_WIDTH-drive_width+X_WALL)+c_size, d_depth+SHIELD_DEPTH+spacer*3, drive_height+(conn_height>conn_width? conn_width/2 :conn_height/2)*2], center=false);
+        // Correct oversize port holes
+        union() {
+          if (!port_hole_can_intersect_side_walls) {
+            c_size=max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
+            color([0.5,0.7,0])
+            translate([(left_align ? -1: 1)*((left_align ? 0: CAGE_WIDTH)+c_size+(port_hole_can_intersect_side_walls?+spacer*3:X_WALL*2)+spacer), 
+            -spacer*3,
+            0
+            ])
+            mirror([(left_align ? 0: 1),0,0])
+            cube(size=[(port_hole_can_intersect_side_walls?0:CAGE_WIDTH-drive_width+X_WALL)+c_size, CAGE_DEPTH+SHIELD_DEPTH+spacer*10, drive_height+(conn_height>conn_width? conn_width/2 :conn_height/2)*2
+            + (last ? Y_WALL : 0)
+            ], center=false);
+            
+            
+            
+            
+            if (first) {
+              
+              color([0.7,0.5,0])
+              translate([(left_align ? 1: -1)*((left_align ? CAGE_WIDTH: 0)+c_size+(port_hole_can_intersect_side_walls?+spacer*3:X_WALL*2)+spacer), 
+              -spacer*3,
+              0
+              ])
+              mirror([(left_align ? 1: 0),0,0])
+              
+              cube(size=[CAGE_WIDTH, CAGE_DEPTH+spacer*10, CAGE_HEIGHT], center=false);
+              
+              
+              
+              color([0.0,0.5,0.7])
+              mirror([0,0,1])
+              translate([0,0,-Y_WALL-spacer*1.5])
+              cube(size=[CAGE_WIDTH, CAGE_DEPTH+spacer*10, drive_height+(conn_height>conn_width? conn_width/2 :conn_height/2)*2], center=false);
+            }
+          }
         }
       }
     }
