@@ -212,7 +212,7 @@ first_add = is_first ? FEET_VDIFF : 0
 d_height
 + last_add
 + Y_WALL
-+first_add
++ first_add
 ;
 
 function height_to_index2(to_index,to_count,include=false) = 
@@ -256,7 +256,6 @@ CAGE_DEPTH_SPACED = CAGE_DEPTH + D_SPACED;
 
 
 module all_feet() {
-    if (RUBBER_FEET_DEPTH_N > 0) {
   // Add feet
   translate([0,0,RUBBER_FEET_DEPTH_N-SPACER])
   union() {
@@ -276,11 +275,12 @@ module all_feet() {
     translate([CAGE_WIDTH+-x,zu,y])
     feet(CAGE_HEIGHT, CAGE_WIDTH, CAGE_DEPTH+SPACER);
   }
-  }
 }
 
 module feet(drive_height, drive_width, d_depth) {
+        if (RUBBER_FEET_DEPTH_N > 0 || RUBBER_FEET_DIAMETER_N > 0) {
   cylinder(r=RUBBER_FEET_DIAMETER_N, h=RUBBER_FEET_DEPTH_N, center=false);  
+        }
 }
 
 module chamber(details) {
@@ -292,17 +292,18 @@ module chamber(details) {
   lr_adjust = LEFT_ALIGN && (drive_width*2+X_WALL*2 != CAGE_WIDTH)  ? CAGE_WIDTH-drive_width-X_WALL*2: 0;
   for (curr_count=[1:1:count]) {
     height_so_far = height_to_index(to_index=index, to_count=curr_count);
-    first=curr_count==1 && index==0;
+    first = curr_count==1 && index==0;
     translate([X_WALL, REAR_WALL, Y_WALL])
     translate([lr_adjust, CAGE_DEPTH-drive_depth, height_so_far + (!first?0:FEET_VDIFF)])
     color("red")
-    cube(size=[drive_width, drive_depth, drive_height], center=false);
+    cube(size = [drive_width, drive_depth, drive_height], center=false);
   }
 }
 
 
 module ports(details) {
   drive_depth = struct_val(details, "depth");
+  drive_width = struct_val(details, "width_padded");
   USB_type = struct_val(details, "type");
   vUSB = struct_val(details, "vUSB");
   hUSB = struct_val(details, "hUSB");
@@ -312,7 +313,7 @@ module ports(details) {
   index = struct_val(details, "index");
   intersect_shield = (!CAN_INTERSECT ? SHIELD_DEPTH: 0);
   conn_depth = CAGE_DEPTH-drive_depth+REAR_WALL+D_SPACED*3.5-intersect_shield;
-  c_size=max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
+  c_size = max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
   
   for (curr_count=[1:1:count]) {
     if (is_def(conn_height) && is_def(conn_width) && USB_type != "none") {
@@ -321,7 +322,7 @@ module ports(details) {
       height_so_far = height_to_index(to_index=index, to_count=curr_count);
       first=curr_count==1 && index==0;
       last=curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
-      translate([X_WALL+hUSB + X_PAD, intersect_shield-D_SPACED*3 + conn_depth, height_so_far + vUSB + Y_WALL + (!first?0:FEET_VDIFF)])
+      translate([hUSB  + (LEFT_ALIGN ? CAGE_WIDTH-drive_width-X_WALL : X_WALL + X_PAD), intersect_shield-D_SPACED*3 + conn_depth, height_so_far + vUSB + Y_WALL + (!first?0:FEET_VDIFF)]) // X_PAD Fix?
           port( conn_height,conn_width,conn_depth,vUSB,hUSB);      
       }
     }
@@ -341,8 +342,8 @@ module port_crop(details) {
   conn_height = struct_val(details, "conn_height");
   conn_width = struct_val(details, "conn_width");
   index = struct_val(details, "index");
-  c_size=max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
-    h_gt_w=drive_height+(conn_height>conn_width? conn_width :conn_height);
+  c_size = max((conn_height<=conn_width? conn_width/2 :conn_height/2),CAGE_WIDTH);
+    h_gt_w = drive_height+(conn_height>conn_width? conn_width :conn_height);
     
     if (is_def(conn_height) && is_def(conn_width) && USB_type != "none" && !CAN_INTERSECT) {
               // Non indented port crop
@@ -353,12 +354,10 @@ module port_crop(details) {
               mirror([0,0,1])
               translate([-SPACER,0,-Y_WALL-D_SPACED])
               cube(size=[CAGE_WIDTH_SPACED, CAGE_DEPTH_SPACED, h_gt_w], center=false);
-              
-              
   for (curr_count=[1:1:count]) {
       height_so_far = height_to_index(to_index=index, to_count=curr_count);
-      first=curr_count==1 && index==0;
-      last=curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
+      first = curr_count==1 && index==0;
+      last = curr_count==COUNT_AT_MAX_INDEX && index==MAX_INDEX;
       translate([0, 0, height_so_far + (!first?0:FEET_VDIFF)])
               //Indented port crop
             translate([

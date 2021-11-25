@@ -38,15 +38,16 @@
             "USB_Micro_Width": "10.6",
             "USB_Mini_Height": "6",
             "USB_Mini_Width": "10",
-            "port_hole_can_intersect_side_walls": "true",
-            "rear_shield": "16",
+            "port_hole_can_intersect_side_walls": "false",
+            "rear_shield": "0",
             "rear_wall_thickness": "0.29999999999999999",
             "rounding_radius": "0",
-            "rubber_feet_depth": "2.6000000000000001",
-            "side_padding": "0.10000000000000001",
-            "side_wall_thickness": "2.5",
+            "rubber_feet_depth": "1.4000000000000001",
+            "rubber_feet_diameter": "0",
+            "side_padding": "6",
+            "side_wall_thickness": "10.000000000000002",
             "text_list": "80.3x15.7x110.6x3_Microx0x0x1,78.5x20.7x114.6xCx75x1x1,75x9.2x107x3_Microx0x0x1",
-            "top_bottom_wall_thickness": "0.5",
+            "top_bottom_wall_thickness": "0.29999999999999999",
             "vertical_padding": "0.10000000000000001"
         }
     }
