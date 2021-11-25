@@ -463,9 +463,7 @@ module full_box(data_struct) {
   conn_y_pos = (!CAN_INTERSECT ? SHIELD_DEPTH: 0)-D_SPACED*3;
   conn_z_pos = Y_WALL;   
   //Make the ports
-  translate([conn_y_pos,conn_x_pos,conn_z_pos])
-          
-          
+  translate([conn_x_pos,conn_y_pos,conn_z_pos])
         ports(details=details);
       }
       for (details=[for (x=data_struct) x[1]]) {
